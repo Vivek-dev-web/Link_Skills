@@ -44,9 +44,12 @@ export async function saveUploadedFile(
   folder: keyof typeof ALLOWED_TYPES
 ): Promise<string> {
   validate(file, folder);
-  // Use Vercel Blob in production; fall back to local disk in dev
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     return saveToBlob(file, folder);
+  }
+  // Vercel's serverless filesystem is read-only — Blob token must be set
+  if (process.env.VERCEL) {
+    throw new Error("File uploads require Vercel Blob. Add BLOB_READ_WRITE_TOKEN in project settings.");
   }
   return saveToDisk(file, folder);
 }
