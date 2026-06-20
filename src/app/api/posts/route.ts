@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     include: {
       author: { select: { id: true, name: true, image: true, headline: true } },
       _count: { select: { likes: true, comments: true } },
-      likes: session?.user ? { where: { userId: session.user.id }, select: { id: true } } : false,
+      likes: { where: { userId: session?.user?.id ?? "" }, select: { id: true } },
     },
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * pageSize,
