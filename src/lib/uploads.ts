@@ -1,8 +1,4 @@
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { randomToken } from "@/lib/utils";
-
-const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 
 const ALLOWED_TYPES: Record<string, string[]> = {
   photos: ["image/jpeg", "image/png", "image/webp", "image/gif"],
@@ -13,38 +9,44 @@ const ALLOWED_TYPES: Record<string, string[]> = {
   certificates: ["application/pdf"],
 };
 
-const MAX_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 
-/**
- * Saves an uploaded File to /public/uploads/<folder>/ and returns the
- * public URL path (e.g. "/uploads/photos/abc123.png"). This stands in for
- * an S3 bucket — swap this implementation out for an S3 SDK call later
- * without touching any call sites.
- */
+function validate(file: File, folder: keyof typeof ALLOWED_TYPES) {
+  if (!file || file.size === 0) throw new Error("No file provided.");
+  if (file.size > MAX_BYTES) throw new Error("File is too large (max 8 MB).");
+  const allowed = ALLOWED_TYPES[folder];
+  if (allowed && !allowed.includes(file.type))
+    throw new Error(`Unsupported file type: ${file.type}`);
+}
+
+async function saveToBlob(file: File, folder: string): Promise<string> {
+  const { put } = await import("@vercel/blob");
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const filename = `${folder}/${Date.now()}-${randomToken(8)}.${ext}`;
+  const blob = await put(filename, file, { access: "public" });
+  return blob.url;
+}
+
+async function saveToDisk(file: File, folder: string): Promise<string> {
+  const { writeFile, mkdir } = await import("fs/promises");
+  const path = await import("path");
+  const dir = path.join(process.cwd(), "public", "uploads", folder);
+  await mkdir(dir, { recursive: true });
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const filename = `${Date.now()}-${randomToken(8)}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(dir, filename), buffer);
+  return `/uploads/${folder}/${filename}`;
+}
+
 export async function saveUploadedFile(
   file: File,
   folder: keyof typeof ALLOWED_TYPES
 ): Promise<string> {
-  if (!file || file.size === 0) {
-    throw new Error("No file provided.");
+  validate(file, folder);
+  // Use Vercel Blob in production; fall back to local disk in dev
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return saveToBlob(file, folder);
   }
-  if (file.size > MAX_BYTES) {
-    throw new Error("File is too large (max 8MB).");
-  }
-  const allowed = ALLOWED_TYPES[folder];
-  if (allowed && !allowed.includes(file.type)) {
-    throw new Error(`Unsupported file type: ${file.type}`);
-  }
-
-  const dir = path.join(UPLOAD_ROOT, folder);
-  await mkdir(dir, { recursive: true });
-
-  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
-  const filename = `${Date.now()}-${randomToken(8)}.${ext}`;
-  const filepath = path.join(dir, filename);
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filepath, buffer);
-
-  return `/uploads/${folder}/${filename}`;
+  return saveToDisk(file, folder);
 }
