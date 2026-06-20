@@ -32,8 +32,6 @@ export async function POST(req: Request) {
         email: normalizedEmail,
         password: hashed,
         role,
-        // Local/dev build: skip real email verification so the app is
-        // usable immediately. See README for wiring up a real mailer.
         emailVerified: new Date(),
         notificationPrefs: { create: {} },
       },
