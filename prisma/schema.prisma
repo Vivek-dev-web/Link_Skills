@@ -1,0 +1,452 @@
+// Atlas — professional networking / jobs / learning platform
+// NOTE: SQLite has no native enum type, so fields that would be enums
+// (role, status, workType, etc.) are plain Strings with allowed values
+// validated in code — see src/lib/constants.ts for the canonical lists.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────── Users & Profiles ─────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String
+  role           String   @default("MEMBER") // MEMBER | RECRUITER | PROVIDER | ADMIN
+  image          String?
+  headline       String?
+  about          String?
+  location       String?
+  currentRole    String?
+  currentCompany String?
+  visibility     String   @default("PUBLIC") // PUBLIC | CONNECTIONS | PRIVATE
+  resumeUrl      String?
+  emailVerified  DateTime?
+  deactivated    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  experiences  Experience[]
+  education    Education[]
+  skills       UserSkill[]
+  posts        Post[]
+  likes        Like[]
+  comments     Comment[]
+
+  sentConnections     Connection[] @relation("Requester")
+  receivedConnections Connection[] @relation("Addressee")
+
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("Followee")
+
+  blocking Block[] @relation("Blocker")
+  blockedBy Block[] @relation("Blocked")
+
+  notifications Notification[]
+
+  sentMessages  Message[]                 @relation("Sender")
+  conversations ConversationParticipant[]
+
+  companyMemberships CompanyMember[]
+  postedJobs         Job[]                @relation("PostedBy")
+  applications       Application[]
+  savedJobs          SavedJob[]
+
+  createdCourses Course[]       @relation("CourseCreator")
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  certificates   Certificate[]
+  courseReviews  CourseReview[]
+
+  notificationPrefs NotificationPreference?
+  passwordResets    PasswordResetToken[]
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  company     String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  current     Boolean   @default(false)
+  description String?
+  createdAt   DateTime  @default(now())
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school      String
+  degree      String?
+  field       String?
+  startDate   DateTime
+  endDate     DateTime?
+  description String?
+  createdAt   DateTime  @default(now())
+}
+
+model Skill {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  userSkills   UserSkill[]
+  jobSkills    JobSkill[]
+  courseSkills CourseSkill[]
+}
+
+model UserSkill {
+  id           String  @id @default(cuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId      String
+  skill        Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  endorsements Int     @default(0)
+  source       String  @default("manual") // manual | course:<courseId>
+
+  @@unique([userId, skillId])
+}
+
+// ───────────────────────── Connections / Follow ─────────────────────────
+
+model Connection {
+  id          String   @id @default(cuid())
+  requesterId String
+  requester   User     @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User     @relation("Addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      String   @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+}
+
+model Follow {
+  id         String   @id @default(cuid())
+  followerId String
+  follower   User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followeeId String
+  followee   User     @relation("Followee", fields: [followeeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, followeeId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+// ───────────────────────── Feed ─────────────────────────
+
+model Post {
+  id          String    @id @default(cuid())
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content     String
+  imageUrl    String?
+  linkUrl     String?
+  documentUrl String?
+  createdAt   DateTime  @default(now())
+  likes       Like[]
+  comments    Comment[]
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// ───────────────────────── Notifications ─────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // CONNECTION_REQUEST | CONNECTION_ACCEPTED | POST_LIKE | POST_COMMENT | JOB_MATCH | APPLICATION_UPDATE | COURSE_UPDATE | MESSAGE
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model NotificationPreference {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionsEmail    Boolean @default(true)
+  connectionsInApp    Boolean @default(true)
+  engagementEmail     Boolean @default(true)
+  engagementInApp     Boolean @default(true)
+  jobsEmail           Boolean @default(true)
+  jobsInApp           Boolean @default(true)
+  coursesEmail        Boolean @default(true)
+  coursesInApp         Boolean @default(true)
+  messagesEmail       Boolean @default(true)
+  messagesInApp       Boolean @default(true)
+}
+
+// ───────────────────────── Messaging ─────────────────────────
+
+model Conversation {
+  id           String                     @id @default(cuid())
+  participants ConversationParticipant[]
+  messages     Message[]
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+  typingAt       DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  createdAt      DateTime     @default(now())
+}
+
+// ───────────────────────── Companies & Jobs ─────────────────────────
+
+model Company {
+  id        String          @id @default(cuid())
+  name      String
+  slug      String          @unique
+  logoUrl   String?
+  about     String?
+  website   String?
+  industry  String?
+  size      String?
+  members   CompanyMember[]
+  jobs      Job[]
+  createdAt DateTime        @default(now())
+}
+
+model CompanyMember {
+  id        String  @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String  @default("RECRUITER")
+
+  @@unique([companyId, userId])
+}
+
+model Job {
+  id              String        @id @default(cuid())
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  postedById      String
+  postedBy        User          @relation("PostedBy", fields: [postedById], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  requirements    String?
+  location        String
+  workType        String        @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
+  experienceLevel String        @default("MID")        // ENTRY | MID | SENIOR | LEAD | EXECUTIVE
+  salaryMin       Int?
+  salaryMax       Int?
+  remote          Boolean       @default(false)
+  status          String        @default("OPEN")       // OPEN | CLOSED | DRAFT
+  skills          JobSkill[]
+  applications    Application[]
+  savedBy         SavedJob[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model JobSkill {
+  id      String @id @default(cuid())
+  jobId   String
+  job     Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+}
+
+model Application {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicantId String
+  applicant   User     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  resumeUrl   String?
+  coverLetter String?
+  status      String   @default("APPLIED") // APPLIED | SHORTLISTED | INTERVIEW | OFFER | REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([jobId, applicantId])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, userId])
+}
+
+// ───────────────────────── Training / Learning ─────────────────────────
+
+model Course {
+  id              String         @id @default(cuid())
+  title           String
+  description     String
+  creatorId       String
+  creator         User           @relation("CourseCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  providerName    String?
+  level           String         @default("BEGINNER") // BEGINNER | INTERMEDIATE | ADVANCED
+  imageUrl        String?
+  published       Boolean        @default(true)
+  skills          CourseSkill[]
+  modules         Module[]
+  enrollments     Enrollment[]
+  reviews         CourseReview[]
+  certificates    Certificate[]
+  createdAt       DateTime       @default(now())
+}
+
+model CourseSkill {
+  id      String @id @default(cuid())
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  skillId String
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, skillId])
+}
+
+model Module {
+  id       String   @id @default(cuid())
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title    String
+  order    Int
+  lessons  Lesson[]
+}
+
+model Lesson {
+  id              String           @id @default(cuid())
+  moduleId        String
+  module          Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title           String
+  type            String           @default("TEXT") // TEXT | VIDEO | DOCUMENT | QUIZ
+  content         String           // body text, video URL, doc URL, or JSON-encoded quiz
+  order           Int
+  durationMinutes Int              @default(5)
+  progress        LessonProgress[]
+}
+
+model Enrollment {
+  id              String    @id @default(cuid())
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progressPercent Int       @default(0)
+  lastAccessedAt  DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@unique([courseId, userId])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([lessonId, userId])
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseName String
+  issuedAt   DateTime @default(now())
+  fileUrl    String?
+
+  @@unique([userId, courseId])
+}
+
+model CourseReview {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, userId])
+}
+
+// ───────────────────────── Auth helpers ─────────────────────────
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
