@@ -8,25 +8,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#15192B",
-        paper: "#F7F5EF",
+        ink: "#1B1F3B",
+        paper: "#F7F8FA",
         surface: "#FFFFFF",
-        border: "#E5E1D4",
-        muted: "#6F6C5E",
+        border: "#E4E7EC",
+        muted: "#64748B",
+        brand: {
+          DEFAULT: "#1B1F3B",
+          dark: "#0F1225",
+          mid: "#2D3158",
+          light: "#ECEDF5",
+        },
         coral: {
           DEFAULT: "#FF6B47",
           dark: "#E2552F",
-          light: "#FFE4DA",
+          light: "#FFF0EB",
         },
         teal: {
-          DEFAULT: "#0F7A72",
-          dark: "#0B5C56",
-          light: "#DCF1EE",
+          DEFAULT: "#00C4A7",
+          dark: "#009986",
+          light: "#D0F7F2",
         },
         amber: {
-          DEFAULT: "#D98F2B",
-          dark: "#B5731D",
-          light: "#FBEBD3",
+          DEFAULT: "#F59E0B",
+          dark: "#D97706",
+          light: "#FEF3C7",
         },
       },
       fontFamily: {
@@ -35,8 +41,9 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       boxShadow: {
-        card: "0 1px 2px rgba(21, 25, 43, 0.06), 0 1px 12px rgba(21, 25, 43, 0.04)",
-        pop: "0 8px 30px rgba(21, 25, 43, 0.12)",
+        card: "0 1px 3px rgba(27,31,59,0.06), 0 2px 12px rgba(27,31,59,0.04)",
+        hover: "0 8px 32px rgba(27,31,59,0.14)",
+        pop: "0 16px 48px rgba(27,31,59,0.18)",
       },
       borderRadius: {
         xl2: "1.25rem",

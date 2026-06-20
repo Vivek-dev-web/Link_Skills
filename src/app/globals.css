@@ -19,27 +19,33 @@ body {
 }
 
 ::selection {
-  background-color: theme("colors.coral.light");
-  color: theme("colors.coral.dark");
+  background-color: theme("colors.teal.light");
+  color: theme("colors.teal.dark");
 }
 
 :focus-visible {
-  outline: 2px solid theme("colors.coral.DEFAULT");
+  outline: 2px solid theme("colors.teal.DEFAULT");
   outline-offset: 2px;
 }
 
 @layer components {
   .card {
-    @apply bg-surface rounded-xl2 border border-border shadow-card;
+    @apply bg-surface rounded-xl2 border border-border shadow-card transition-shadow duration-200;
+  }
+  .card-hover {
+    @apply card hover:shadow-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer;
   }
 
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-ink text-paper hover:bg-ink/90;
+    @apply btn bg-ink text-paper hover:bg-brand-mid;
   }
   .btn-accent {
+    @apply btn bg-teal text-white hover:bg-teal-dark;
+  }
+  .btn-coral {
     @apply btn bg-coral text-white hover:bg-coral-dark;
   }
   .btn-outline {
@@ -53,7 +59,7 @@ body {
   }
 
   .input {
-    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none;
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-teal focus:outline-none;
   }
   .textarea {
     @apply input resize-y;
@@ -74,10 +80,11 @@ body {
   .chip-amber {
     @apply chip bg-amber-light border-amber/20 text-amber-dark;
   }
+  .chip-brand {
+    @apply chip bg-brand-light border-brand/20 text-brand-mid;
+  }
 
-  /* Signature "route line" timeline — used for experience/education/learning
-     progress. A dotted vertical line with waypoint nodes evokes the app's
-     "Atlas: navigate your career" idea without being decorative for its own sake. */
+  /* Career route-line timeline */
   .route-line {
     @apply relative pl-7;
   }
@@ -89,7 +96,7 @@ body {
     background-repeat: repeat-y;
   }
   .route-node {
-    @apply absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-coral;
+    @apply absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-teal;
   }
   .route-node-done {
     @apply route-node bg-teal border-teal;
@@ -97,5 +104,13 @@ body {
 
   .skeleton {
     @apply animate-pulse bg-border/60 rounded;
+  }
+
+  /* Gradient hero used on landing page and banners */
+  .gradient-brand {
+    background: linear-gradient(135deg, #1B1F3B 0%, #2D3158 100%);
+  }
+  .gradient-teal {
+    background: linear-gradient(135deg, #00C4A7 0%, #1B1F3B 100%);
   }
 }
