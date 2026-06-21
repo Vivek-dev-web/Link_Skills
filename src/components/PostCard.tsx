@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2, CornerDownRight } from "lucide-react";
+import { ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2, CornerDownRight, SendHorizonal } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/Avatar";
 import { formatRelativeTime, cn } from "@/lib/utils";
@@ -270,13 +270,23 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
           {session?.user && (
             <div className="flex items-center gap-2">
               <Avatar name={session.user.name ?? "?"} src={session.user.image} size="xs" />
-              <input
-                className="input flex-1 rounded-full"
-                placeholder="Write a comment…"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitComment()}
-              />
+              <div className="flex flex-1 items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 focus-within:border-teal transition-colors">
+                <input
+                  className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted outline-none"
+                  placeholder="Write a comment…"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submitComment()}
+                />
+                <button
+                  onClick={submitComment}
+                  disabled={!commentText.trim()}
+                  className="text-teal disabled:text-muted transition-colors disabled:cursor-not-allowed p-0.5"
+                  title="Post comment"
+                >
+                  <SendHorizonal size={16} strokeWidth={2} />
+                </button>
+              </div>
             </div>
           )}
         </div>
