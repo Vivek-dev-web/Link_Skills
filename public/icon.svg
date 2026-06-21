@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Rounded square background -->
+  <rect width="1024" height="1024" rx="220" fill="#1B1F3B"/>
+  <!-- Teal accent bar at bottom -->
+  <rect x="120" y="840" width="784" height="44" rx="22" fill="#00C4A7"/>
+  <!-- Letter A -->
+  <text
+    x="512"
+    y="700"
+    font-family="Georgia, serif"
+    font-size="660"
+    font-weight="700"
+    text-anchor="middle"
+    fill="#FFFFFF"
+    letter-spacing="-20"
+  >A</text>
+  <!-- Teal dot on the crossbar of A -->
+  <circle cx="512" cy="478" r="38" fill="#00C4A7"/>
+</svg>

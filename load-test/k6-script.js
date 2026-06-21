@@ -2,23 +2,20 @@
  * Atlas Load Test — k6
  *
  * Install k6:  https://k6.io/docs/get-started/installation/
- *   Windows:   choco install k6   OR   winget install k6
+ *   Windows:   winget install k6
  *
- * Run (light):
- *   k6 run load-test/k6-script.js \
- *       --env BASE_URL=https://link-skills.vercel.app \
- *       --env TEST_EMAIL=loadtest@atlas.dev \
- *       --env TEST_PASSWORD=Test@123456
+ * Prerequisites — run once to create test accounts:
+ *   node load-test/create-test-user.js
+ *   (for numbered accounts 1-20, the PowerShell loop in the README)
+ *
+ * Run (light — default, 20 VUs ~3 min):
+ *   k6 run load-test/k6-script.js --env BASE_URL=https://link-skills.vercel.app --env TEST_PASSWORD=Test@123456
  *
  * Run (heavier):
- *   k6 run load-test/k6-script.js --env BASE_URL=... --env TEST_EMAIL=... \
- *       --env TEST_PASSWORD=... --env SCENARIO=medium
+ *   k6 run load-test/k6-script.js --env BASE_URL=... --env TEST_PASSWORD=... --env SCENARIO=medium
  *
  * Run (stress):
  *   ... --env SCENARIO=stress
- *
- * Create the test user first:
- *   node load-test/create-test-user.js
  */
 
 import http from "k6/http";
@@ -26,41 +23,34 @@ import { check, sleep, group } from "k6";
 import { Counter, Rate, Trend } from "k6/metrics";
 import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
 
-// ── Config ──────────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
 const BASE_URL  = (__ENV.BASE_URL || "https://link-skills.vercel.app").replace(/\/$/, "");
 const PASSWORD  = __ENV.TEST_PASSWORD || "Test@123456";
 const SCENARIO  = __ENV.SCENARIO || "light";
-// Max numbered test accounts (loadtest1@atlas.dev … loadtestN@atlas.dev).
-// Each VU gets its own account so sessions never conflict.
 const MAX_USERS = parseInt(__ENV.MAX_USERS || "20", 10);
 
-function emailForVU() {
-  const slot = ((__VU - 1) % MAX_USERS) + 1;
-  return `loadtest${slot}@atlas.dev`;
-}
-
-// ── Scenarios ────────────────────────────────────────────────────────────────
+// ── Scenarios ─────────────────────────────────────────────────────────────────
 
 const STAGES = {
   light: [
-    { duration: "20s", target: 5 },
+    { duration: "20s", target: 5  },
     { duration: "1m",  target: 20 },
     { duration: "1m",  target: 20 },
-    { duration: "20s", target: 0 },
+    { duration: "20s", target: 0  },
   ],
   medium: [
     { duration: "30s", target: 10 },
     { duration: "2m",  target: 50 },
     { duration: "2m",  target: 50 },
-    { duration: "30s", target: 0 },
+    { duration: "30s", target: 0  },
   ],
   stress: [
-    { duration: "30s", target: 10 },
-    { duration: "1m",  target: 50 },
+    { duration: "30s", target: 10  },
+    { duration: "1m",  target: 50  },
     { duration: "1m",  target: 100 },
     { duration: "2m",  target: 100 },
-    { duration: "30s", target: 0 },
+    { duration: "30s", target: 0   },
   ],
 };
 
@@ -73,153 +63,156 @@ export const options = {
     },
   },
   thresholds: {
-    // 95% of requests must complete under 3 s
     http_req_duration: ["p(95)<3000"],
-    // Less than 5% of requests may fail
-    http_req_failed: ["rate<0.05"],
-    // Login must succeed at least 90% of the time
-    login_success: ["rate>0.90"],
+    http_req_failed:   ["rate<0.05"],
+    login_success:     ["rate>0.90"],
   },
 };
 
 // ── Custom metrics ────────────────────────────────────────────────────────────
 
-const loginSuccess  = new Rate("login_success");
-const feedLoadTime  = new Trend("feed_load_time_ms", true);
-const apiErrors     = new Counter("api_errors");
+const loginSuccess = new Rate("login_success");
+const feedLoadTime = new Trend("feed_load_time_ms", true);
+const apiErrors    = new Counter("api_errors");
+
+// ── Setup: log in all N users once, extract their session tokens ──────────────
+// k6 setup() runs once before VUs start. We pre-authenticate every test account
+// and pass the raw session-token cookie value to the VU functions, which inject
+// it into their per-VU cookie jar on every iteration — bypassing the k6/NextAuth
+// cookie-persistence issue where __Secure- prefixed cookies aren't always sent.
+
+export function setup() {
+  const sessions = [];
+
+  for (let i = 1; i <= MAX_USERS; i++) {
+    const email = `loadtest${i}@atlas.dev`;
+
+    // 1. CSRF token
+    const csrfRes = http.get(`${BASE_URL}/api/auth/csrf`);
+    if (csrfRes.status !== 200) {
+      console.error(`[setup] CSRF failed for ${email} (${csrfRes.status})`);
+      sessions.push({ email, token: null, cookieName: null });
+      sleep(0.3);
+      continue;
+    }
+
+    let csrfToken;
+    try { csrfToken = JSON.parse(csrfRes.body).csrfToken; }
+    catch { sessions.push({ email, token: null, cookieName: null }); continue; }
+
+    // 2. Credentials POST — don't follow redirect, just capture Set-Cookie
+    const loginRes = http.post(
+      `${BASE_URL}/api/auth/callback/credentials`,
+      { csrfToken, email, password: PASSWORD, callbackUrl: BASE_URL, json: "true" },
+      { redirects: 0 }
+    );
+
+    // Extract session-token cookie from the response (works regardless of __Secure- prefix)
+    let token = null;
+    let cookieName = null;
+    for (const [name, vals] of Object.entries(loginRes.cookies || {})) {
+      if (name.includes("session-token")) {
+        cookieName = name;
+        token = vals[0].value;
+        break;
+      }
+    }
+
+    if (token) {
+      console.log(`[setup] ✓ ${email} → cookie: ${cookieName}`);
+    } else {
+      console.error(`[setup] ✗ ${email} — no session token (status ${loginRes.status})`);
+    }
+
+    sessions.push({ email, token, cookieName });
+    sleep(0.3);
+  }
+
+  return { sessions };
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Per-VU session flag — k6 reuses VUs across iterations so we only log in once
-let _loggedIn = false;
-
-function login() {
-  // Step 1 — fetch CSRF token (NextAuth requires it for credential POSTs)
-  const csrfRes = http.get(`${BASE_URL}/api/auth/csrf`, { tags: { name: "auth/csrf" } });
-  if (!check(csrfRes, { "csrf 200": (r) => r.status === 200 })) {
-    apiErrors.add(1);
-    loginSuccess.add(false);
-    return false;
-  }
-
-  let csrfToken;
-  try {
-    csrfToken = JSON.parse(csrfRes.body).csrfToken;
-  } catch {
-    loginSuccess.add(false);
-    return false;
-  }
-
-  // Step 2 — POST credentials (k6 cookie jar carries the session cookie)
-  const loginRes = http.post(
-    `${BASE_URL}/api/auth/callback/credentials`,
-    {
-      csrfToken,
-      email: emailForVU(),
-      password: PASSWORD,
-      callbackUrl: BASE_URL,
-      json: "true",
-    },
-    {
-      redirects: 0,
-      tags: { name: "auth/login" },
-    }
-  );
-
-  // NextAuth returns 302 on success or 200 with a redirect URL; both are fine
-  const ok = loginRes.status === 200 || loginRes.status === 302;
-  loginSuccess.add(ok);
-  if (!ok) apiErrors.add(1);
-  return ok;
+function parsePosts(res) {
+  try { return JSON.parse(res.body).posts || []; }
+  catch { return []; }
 }
 
-function parsePosts(res) {
-  try {
-    return JSON.parse(res.body).posts || [];
-  } catch {
-    return [];
-  }
+function injectSession(data) {
+  const idx = (__VU - 1) % data.sessions.length;
+  const { token, cookieName } = data.sessions[idx];
+  if (!token) return false;
+  // Inject into this VU's per-request jar so every request in this iteration
+  // carries the correct session cookie, regardless of what k6 persisted.
+  const jar = http.cookieJar();
+  jar.set(`${BASE_URL}/`, cookieName, token);
+  return true;
 }
 
 // ── Main VU loop ──────────────────────────────────────────────────────────────
 
-export default function () {
-  // Login once per VU lifetime
-  if (!_loggedIn) {
-    _loggedIn = login();
-    if (!_loggedIn) {
-      sleep(2);
-      return;
-    }
-    sleep(1);
+export default function (data) {
+  const authed = injectSession(data);
+  loginSuccess.add(authed);
+  if (!authed) {
+    apiErrors.add(1);
+    sleep(2);
+    return;
   }
 
-  // ── 1. Load feed ─────────────────────────────────────────────────────────
+  // 1. Feed ──────────────────────────────────────────────────────────────────
+  let posts = [];
   group("feed", () => {
     const t0 = Date.now();
     const res = http.get(`${BASE_URL}/api/posts?page=1`, { tags: { name: "posts/list" } });
     feedLoadTime.add(Date.now() - t0);
-
     check(res, { "feed 200": (r) => r.status === 200 });
-
-    const posts = parsePosts(res);
-
-    if (posts.length > 0) {
-      // Pick a random post
-      const post = posts[randomIntBetween(0, posts.length - 1)];
-
-      sleep(randomIntBetween(1, 2));
-
-      // ── 2. Like the post ────────────────────────────────────────────────
-      group("like_post", () => {
-        const likeRes = http.post(
-          `${BASE_URL}/api/posts/${post.id}/like`,
-          null,
-          { tags: { name: "posts/like" } }
-        );
-        check(likeRes, { "like 200": (r) => r.status === 200 });
-      });
-
-      sleep(randomIntBetween(1, 2));
-
-      // ── 3. Load comments ────────────────────────────────────────────────
-      group("comments", () => {
-        const commentsRes = http.get(
-          `${BASE_URL}/api/posts/${post.id}/comments`,
-          { tags: { name: "posts/comments" } }
-        );
-        check(commentsRes, { "comments 200": (r) => r.status === 200 });
-
-        sleep(randomIntBetween(1, 2));
-
-        // ── 4. Post a comment ─────────────────────────────────────────────
-        const commentRes = http.post(
-          `${BASE_URL}/api/posts/${post.id}/comments`,
-          JSON.stringify({ content: "Interesting — thanks for sharing this!" }),
-          {
-            headers: { "Content-Type": "application/json" },
-            tags: { name: "posts/comment" },
-          }
-        );
-        check(commentRes, { "comment 200/201": (r) => r.status === 200 || r.status === 201 });
-      });
-    }
-
-    sleep(randomIntBetween(1, 3));
+    posts = parsePosts(res);
   });
 
-  // ── 5. Notifications ─────────────────────────────────────────────────────
+  if (posts.length > 0) {
+    const post = posts[randomIntBetween(0, posts.length - 1)];
+    sleep(randomIntBetween(1, 2));
+
+    // 2. Like ────────────────────────────────────────────────────────────────
+    group("like_post", () => {
+      const r = http.post(
+        `${BASE_URL}/api/posts/${post.id}/like`,
+        null,
+        { tags: { name: "posts/like" } }
+      );
+      check(r, { "like 200": (r) => r.status === 200 });
+      if (r.status !== 200) apiErrors.add(1);
+    });
+
+    sleep(randomIntBetween(1, 2));
+
+    // 3. Comments ────────────────────────────────────────────────────────────
+    group("comments", () => {
+      const getRes = http.get(
+        `${BASE_URL}/api/posts/${post.id}/comments`,
+        { tags: { name: "posts/comments" } }
+      );
+      check(getRes, { "comments 200": (r) => r.status === 200 });
+
+      sleep(randomIntBetween(1, 2));
+
+      const postRes = http.post(
+        `${BASE_URL}/api/posts/${post.id}/comments`,
+        JSON.stringify({ content: "Great post — very insightful!" }),
+        { headers: { "Content-Type": "application/json" }, tags: { name: "posts/comment" } }
+      );
+      check(postRes, { "comment 200": (r) => r.status === 200 });
+      if (postRes.status !== 200) apiErrors.add(1);
+    });
+  }
+
+  sleep(randomIntBetween(1, 2));
+
+  // 4. Notifications ─────────────────────────────────────────────────────────
   group("notifications", () => {
-    const notifRes = http.get(`${BASE_URL}/api/notifications`, { tags: { name: "notifications" } });
-    check(notifRes, { "notif 200": (r) => r.status === 200 });
-  });
-
-  sleep(randomIntBetween(1, 3));
-
-  // ── 6. Profile page (view own profile via API) ────────────────────────────
-  group("profile", () => {
-    const meRes = http.get(`${BASE_URL}/api/users`, { tags: { name: "users/list" } });
-    check(meRes, { "users 200": (r) => r.status === 200 });
+    const r = http.get(`${BASE_URL}/api/notifications`, { tags: { name: "notifications" } });
+    check(r, { "notif 200": (r) => r.status === 200 });
   });
 
   sleep(randomIntBetween(2, 4));

@@ -1,0 +1,52 @@
+{
+  "packageId": "dev.atlas.app",
+  "host": "link-skills.vercel.app",
+  "name": "Atlas — Navigate Your Career",
+  "launcherName": "Atlas",
+  "display": "standalone",
+  "themeColor": "#1B1F3B",
+  "navigationColor": "#1B1F3B",
+  "navigationColorDark": "#0F1225",
+  "navigationDividerColor": "#1B1F3B",
+  "navigationDividerColorDark": "#0F1225",
+  "backgroundColor": "#F7F8FA",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://link-skills.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://link-skills.vercel.app/icons/icon-512-maskable.png",
+  "monochromeIconUrl": "https://link-skills.vercel.app/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./atlas-keystore.jks",
+    "alias": "atlas"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "Feed",
+      "short_name": "Feed",
+      "url": "/feed",
+      "icons": [{ "src": "https://link-skills.vercel.app/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Jobs",
+      "short_name": "Jobs",
+      "url": "/jobs",
+      "icons": [{ "src": "https://link-skills.vercel.app/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://link-skills.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": false },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "orientation": "default",
+  "fingerprints": []
+}

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -26,6 +26,26 @@ export const metadata: Metadata = {
   title: "Atlas — navigate your career",
   description:
     "Atlas is a professional networking platform: build your network, find your next role, and grow your skills, in one place.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Atlas",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1B1F3B",
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
