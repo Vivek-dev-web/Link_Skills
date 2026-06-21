@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2 } from "lucide-react";
+import { ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2, CornerDownRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/Avatar";
 import { formatRelativeTime, cn } from "@/lib/utils";
@@ -35,6 +35,70 @@ const REACTIONS: { key: Reaction; icon: React.ElementType; label: string; active
   { key: "celebrate", icon: Smile, label: "Celebrate", activeClass: "text-amber-dark" },
   { key: "insightful", icon: Lightbulb, label: "Insightful", activeClass: "text-coral" },
 ];
+
+function CommentRow({
+  comment,
+  postId,
+  onReply,
+}: {
+  comment: any;
+  postId: string;
+  onReply: (name: string) => void;
+}) {
+  const { data: session } = useSession();
+  const [liked, setLiked] = useState(comment.likedByMe ?? false);
+  const [likeCount, setLikeCount] = useState(comment.likeCount ?? 0);
+
+  async function toggleLike() {
+    if (!session?.user) return;
+    const prev = liked;
+    setLiked(!prev);
+    setLikeCount((c: number) => (prev ? c - 1 : c + 1));
+    const res = await fetch(`/api/posts/${postId}/comments/${comment.id}/like`, { method: "POST" });
+    if (res.ok) {
+      const data = await res.json();
+      setLiked(data.liked);
+      setLikeCount(data.likeCount);
+    } else {
+      setLiked(prev);
+      setLikeCount((c: number) => (prev ? c + 1 : c - 1));
+    }
+  }
+
+  return (
+    <div className="flex items-start gap-2">
+      <Avatar name={comment.user.name} src={comment.user.image} size="xs" />
+      <div className="flex-1 min-w-0">
+        <div className="bg-paper rounded-xl px-3 py-2">
+          <p className="text-xs font-semibold text-ink">{comment.user.name}</p>
+          <p className="text-sm text-ink mt-0.5">{comment.content}</p>
+        </div>
+        <div className="flex items-center gap-3 mt-1 ml-2">
+          <button
+            onClick={toggleLike}
+            className={cn(
+              "flex items-center gap-1 text-xs font-medium transition-colors",
+              liked ? "text-teal" : "text-muted hover:text-teal"
+            )}
+          >
+            <ThumbsUp size={12} className={liked ? "fill-current" : ""} strokeWidth={liked ? 2.4 : 1.8} />
+            {likeCount > 0 && <span>{likeCount}</span>}
+            <span>{liked ? "Liked" : "Like"}</span>
+          </button>
+          {session?.user && (
+            <button
+              onClick={() => onReply(comment.user.name)}
+              className="flex items-center gap-1 text-xs font-medium text-muted hover:text-ink transition-colors"
+            >
+              <CornerDownRight size={12} strokeWidth={1.8} />
+              Reply
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PostCard({ post, onDeleted }: { post: PostData; onDeleted?: (id: string) => void }) {
   const { data: session } = useSession();
@@ -196,13 +260,12 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
       {showComments && (
         <div className="mt-3 pt-3 border-t border-border space-y-3">
           {comments?.map((c) => (
-            <div key={c.id} className="flex items-start gap-2">
-              <Avatar name={c.user.name} src={c.user.image} size="xs" />
-              <div className="bg-paper rounded-xl px-3 py-2 flex-1">
-                <p className="text-xs font-semibold text-ink">{c.user.name}</p>
-                <p className="text-sm text-ink mt-0.5">{c.content}</p>
-              </div>
-            </div>
+            <CommentRow
+              key={c.id}
+              comment={c}
+              postId={post.id}
+              onReply={(name) => setCommentText(`@${name} `)}
+            />
           ))}
           {session?.user && (
             <div className="flex items-center gap-2">

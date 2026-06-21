@@ -4,13 +4,27 @@ import { prisma } from "@/lib/prisma";
 import { commentSchema } from "@/lib/validations";
 import { notify } from "@/lib/notify";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const session = await getCurrentSession();
   const comments = await prisma.comment.findMany({
     where: { postId: params.id },
-    include: { user: { select: { id: true, name: true, image: true } } },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+      _count: { select: { likes: true } },
+      likes: session?.user
+        ? { where: { userId: session.user.id }, select: { id: true } }
+        : false,
+    },
     orderBy: { createdAt: "asc" },
   });
-  return NextResponse.json({ comments });
+  const formatted = comments.map((c) => ({
+    ...c,
+    likeCount: c._count.likes,
+    likedByMe: Array.isArray((c as any).likes) && (c as any).likes.length > 0,
+    likes: undefined,
+    _count: undefined,
+  }));
+  return NextResponse.json({ comments: formatted });
 }
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
