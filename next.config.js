@@ -24,10 +24,10 @@ module.exports = withPWA({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
-  // Don't cache API routes or auth endpoints
+  // Never cache API routes or auth endpoints regardless of deploy URL
   runtimeCaching: [
     {
-      urlPattern: /^https:\/\/link-skills\.vercel\.app\/api\//,
+      urlPattern: /\/api\//,
       handler: "NetworkOnly",
     },
   ],

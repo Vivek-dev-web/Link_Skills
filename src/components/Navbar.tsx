@@ -16,6 +16,12 @@ import {
   Settings,
   User as UserIcon,
   Home,
+  FileText,
+  Sparkles,
+  ListChecks,
+  Award,
+  DollarSign,
+  HardHat,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
@@ -143,7 +149,7 @@ export default function Navbar() {
             <ChevronDown size={14} className="text-muted" />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 card p-2 z-50 shadow-pop">
+            <div className="absolute right-0 mt-2 w-60 card p-2 z-50 shadow-pop max-h-[80vh] overflow-y-auto">
               <div className="px-3 py-2 border-b border-border mb-1">
                 <p className="font-medium text-sm text-ink truncate">{user?.name}</p>
                 <p className="text-xs text-muted truncate">{user?.email}</p>
@@ -155,19 +161,43 @@ export default function Navbar() {
               >
                 <UserIcon size={16} /> View profile
               </Link>
-              <Link
-                href="/settings"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
-              >
-                <Settings size={16} /> Settings
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-coral hover:bg-coral-light transition-colors"
-              >
-                <LogOut size={16} /> Sign out
-              </button>
+
+              <div className="px-3 py-1 mt-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Job Tools</p>
+              </div>
+              {[
+                { href: "/resume",        label: "Resume Manager",    icon: FileText    },
+                { href: "/my-jobs",       label: "My Jobs",           icon: ListChecks  },
+                { href: "/recommended",   label: "Recommended Jobs",  icon: Sparkles    },
+                { href: "/assessments",   label: "Skill Assessments", icon: Award       },
+                { href: "/salaries",      label: "Salary Insights",   icon: DollarSign  },
+                { href: "/hire",          label: "Hire (Recruiter)",  icon: HardHat     },
+              ].map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
+                >
+                  <Icon size={16} className="text-muted" /> {label}
+                </Link>
+              ))}
+
+              <div className="border-t border-border mt-1 pt-1">
+                <Link
+                  href="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
+                >
+                  <Settings size={16} /> Settings
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-coral hover:bg-coral-light transition-colors"
+                >
+                  <LogOut size={16} /> Sign out
+                </button>
+              </div>
             </div>
           )}
         </div>
