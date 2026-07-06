@@ -22,13 +22,19 @@ import {
   Award,
   DollarSign,
   HardHat,
+  Network,
+  UserCheck,
+  Users2,
+  Calendar,
+  Building2,
+  Newspaper,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/feed", label: "Feed", icon: Home },
-  { href: "/connections", label: "Network", icon: Users },
+  { href: "/network", label: "Network", icon: Users },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/courses", label: "Learning", icon: GraduationCap },
   { href: "/messages", label: "Messages", icon: MessageCircle },
@@ -161,6 +167,27 @@ export default function Navbar() {
               >
                 <UserIcon size={16} /> View profile
               </Link>
+
+              <div className="px-3 py-1 mt-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Network</p>
+              </div>
+              {[
+                { href: "/network",     label: "Manage my network", icon: Network    },
+                { href: "/following",   label: "Following & followers", icon: UserCheck  },
+                { href: "/groups",      label: "Groups",            icon: Users2      },
+                { href: "/events",      label: "Events",            icon: Calendar    },
+                { href: "/pages",       label: "Pages",             icon: Building2   },
+                { href: "/newsletters", label: "Newsletters",       icon: Newspaper   },
+              ].map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
+                >
+                  <Icon size={16} className="text-muted" /> {label}
+                </Link>
+              ))}
 
               <div className="px-3 py-1 mt-1">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">Job Tools</p>

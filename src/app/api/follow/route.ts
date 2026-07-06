@@ -2,6 +2,34 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(req: Request) {
+  const session = await getCurrentSession();
+  if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get("type") ?? "following";
+
+  if (type === "following") {
+    const follows = await prisma.follow.findMany({
+      where: { followerId: session.user.id },
+      include: {
+        followee: { select: { id: true, name: true, image: true, headline: true, currentRole: true, currentCompany: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ follows });
+  } else {
+    const follows = await prisma.follow.findMany({
+      where: { followeeId: session.user.id },
+      include: {
+        follower: { select: { id: true, name: true, image: true, headline: true, currentRole: true, currentCompany: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ follows });
+  }
+}
+
 export async function POST(req: Request) {
   const session = await getCurrentSession();
   if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
