@@ -13,23 +13,23 @@ export async function GET(req: Request) {
       where: {
         deactivated: false,
         visibility: { not: "PRIVATE" },
-        OR: [{ name: { contains: q } }, { headline: { contains: q } }],
+        OR: [{ name: { contains: q, mode: "insensitive" } }, { headline: { contains: q, mode: "insensitive" } }],
       },
       select: { id: true, name: true, image: true, headline: true },
       take: 6,
     }),
     prisma.job.findMany({
-      where: { status: "OPEN", OR: [{ title: { contains: q } }, { location: { contains: q } }] },
+      where: { status: "OPEN", OR: [{ title: { contains: q, mode: "insensitive" } }, { location: { contains: q, mode: "insensitive" } }] },
       include: { company: { select: { name: true, logoUrl: true } } },
       take: 6,
     }),
     prisma.course.findMany({
-      where: { published: true, OR: [{ title: { contains: q } }, { description: { contains: q } }] },
+      where: { published: true, OR: [{ title: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }] },
       select: { id: true, title: true, imageUrl: true, level: true },
       take: 6,
     }),
     prisma.company.findMany({
-      where: { name: { contains: q } },
+      where: { name: { contains: q, mode: "insensitive" } },
       select: { id: true, name: true, logoUrl: true, industry: true },
       take: 6,
     }),

@@ -22,17 +22,17 @@ export async function GET(req: Request) {
   if (q) {
     AND.push({
       OR: [
-        { title: { contains: q } },
-        { description: { contains: q } },
-        { company: { name: { contains: q } } },
+        { title: { contains: q, mode: "insensitive" } },
+        { description: { contains: q, mode: "insensitive" } },
+        { company: { name: { contains: q, mode: "insensitive" } } },
       ],
     });
   }
-  if (location) AND.push({ location: { contains: location } });
+  if (location) AND.push({ location: { contains: location, mode: "insensitive" } });
   if (workType) AND.push({ workType });
   if (experienceLevel) AND.push({ experienceLevel });
   if (remote === "true") AND.push({ remote: true });
-  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill } } } } });
+  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill, mode: "insensitive" } } } } });
   if (minSalary) AND.push({ salaryMax: { gte: Number(minSalary) } });
 
   const [jobs, total] = await Promise.all([

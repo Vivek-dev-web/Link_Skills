@@ -12,9 +12,9 @@ export async function GET(req: Request) {
   const pageSize = 12;
 
   const AND: any[] = [{ published: true }];
-  if (q) AND.push({ OR: [{ title: { contains: q } }, { description: { contains: q } }] });
+  if (q) AND.push({ OR: [{ title: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }] });
   if (level) AND.push({ level });
-  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill } } } } });
+  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill, mode: "insensitive" } } } } });
 
   const [courses, total] = await Promise.all([
     prisma.course.findMany({

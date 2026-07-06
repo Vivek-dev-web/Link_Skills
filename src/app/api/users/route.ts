@@ -24,15 +24,15 @@ export async function GET(req: Request) {
   if (q) {
     AND.push({
       OR: [
-        { name: { contains: q } },
-        { headline: { contains: q } },
-        { currentRole: { contains: q } },
+        { name: { contains: q, mode: "insensitive" } },
+        { headline: { contains: q, mode: "insensitive" } },
+        { currentRole: { contains: q, mode: "insensitive" } },
       ],
     });
   }
-  if (company) AND.push({ currentCompany: { contains: company } });
-  if (location) AND.push({ location: { contains: location } });
-  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill } } } } });
+  if (company) AND.push({ currentCompany: { contains: company, mode: "insensitive" } });
+  if (location) AND.push({ location: { contains: location, mode: "insensitive" } });
+  if (skill) AND.push({ skills: { some: { skill: { name: { contains: skill, mode: "insensitive" } } } } });
   if (AND.length) where.AND = AND;
 
   const [users, total] = await Promise.all([

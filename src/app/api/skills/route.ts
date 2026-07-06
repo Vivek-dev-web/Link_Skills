@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const q = searchParams.get("q")?.trim();
 
   const skills = await prisma.skill.findMany({
-    where: q ? { name: { contains: q } } : undefined,
+    where: q ? { name: { contains: q, mode: "insensitive" } } : undefined,
     orderBy: { name: "asc" },
     take: 15,
   });

@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   const q = searchParams.get("q")?.trim();
 
   const companies = await prisma.company.findMany({
-    where: q ? { name: { contains: q } } : undefined,
+    where: q ? { name: { contains: q, mode: "insensitive" } } : undefined,
     include: { _count: { select: { jobs: true, members: true } } },
     orderBy: { name: "asc" },
     take: 50,
