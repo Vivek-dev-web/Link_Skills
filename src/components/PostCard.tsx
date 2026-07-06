@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2, CornerDownRight, SendHorizonal } from "lucide-react";
+import {
+  ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2,
+  CornerDownRight, SendHorizonal, MoreHorizontal, Bookmark, Link2,
+  Code2, UserMinus, BellOff, Flag, BookmarkCheck,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/Avatar";
 import { formatRelativeTime, cn } from "@/lib/utils";
@@ -110,6 +114,19 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
   const [commentText, setCommentText] = useState("");
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [reposted, setReposted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [unfollowed, setUnfollowed] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   async function handleReaction(r: Reaction) {
     const wasActive = reaction === r;
@@ -148,6 +165,7 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
   }
 
   async function handleDelete() {
+    setMenuOpen(false);
     if (!confirm("Delete this post?")) return;
     const res = await fetch(`/api/posts/${post.id}`, { method: "DELETE" });
     if (res.ok) {
@@ -161,7 +179,44 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
     show("Shared to your network", "success");
   }
 
+  function handleSave() {
+    setSaved((s) => !s);
+    show(saved ? "Removed from saved items" : "Saved to your list", "success");
+    setMenuOpen(false);
+  }
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}/posts/${post.id}`;
+    navigator.clipboard.writeText(url).then(() => show("Link copied to clipboard", "success"));
+    setMenuOpen(false);
+  }
+
+  function handleEmbed() {
+    const code = `<iframe src="${window.location.origin}/embed/posts/${post.id}" width="500" height="300" frameborder="0"></iframe>`;
+    navigator.clipboard.writeText(code).then(() => show("Embed code copied to clipboard", "success"));
+    setMenuOpen(false);
+  }
+
+  function handleUnfollow() {
+    setUnfollowed(true);
+    show(`You'll see fewer posts from ${post.author.name}`, "info");
+    setMenuOpen(false);
+  }
+
+  function handleNotInterested() {
+    setHidden(true);
+    show("We'll show you fewer posts like this", "info");
+    setMenuOpen(false);
+  }
+
+  function handleReport() {
+    show("Post reported. Thanks for the feedback.", "info");
+    setMenuOpen(false);
+  }
+
   const isOwner = (session?.user as any)?.id === post.author.id;
+
+  if (hidden) return null;
 
   return (
     <div className="card p-4 hover:shadow-hover transition-shadow duration-200">
@@ -179,11 +234,42 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
             <p className="text-xs text-muted">{formatRelativeTime(post.createdAt)}</p>
           </div>
         </Link>
-        {isOwner && (
-          <button onClick={handleDelete} className="text-muted hover:text-coral p-1 transition-colors">
-            <Trash2 size={15} />
+
+        {/* 3-dot menu */}
+        <div className="relative flex items-center gap-1" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="p-1.5 rounded-full text-muted hover:text-ink hover:bg-paper transition-colors"
+            aria-label="Post options"
+          >
+            <MoreHorizontal size={18} />
           </button>
-        )}
+
+          {menuOpen && (
+            <div className="absolute right-0 top-8 z-50 w-56 card shadow-pop py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+              <MenuBtn icon={saved ? BookmarkCheck : Bookmark} label={saved ? "Unsave" : "Save"} onClick={handleSave}
+                className={saved ? "text-teal" : ""} />
+              <MenuBtn icon={Link2} label="Copy link to post" onClick={handleCopyLink} />
+              <MenuBtn icon={Code2} label="Embed this post" onClick={handleEmbed} />
+              {!isOwner && (
+                <>
+                  <div className="h-px bg-border my-1" />
+                  <MenuBtn icon={UserMinus} label={unfollowed ? `Following ${post.author.name}` : `Unfollow ${post.author.name}`}
+                    onClick={handleUnfollow} />
+                  <MenuBtn icon={BellOff} label="Not interested" onClick={handleNotInterested} />
+                  <div className="h-px bg-border my-1" />
+                  <MenuBtn icon={Flag} label="Report post" onClick={handleReport} className="text-coral" />
+                </>
+              )}
+              {isOwner && (
+                <>
+                  <div className="h-px bg-border my-1" />
+                  <MenuBtn icon={Trash2} label="Delete post" onClick={handleDelete} className="text-coral" />
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -292,5 +378,30 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
         </div>
       )}
     </div>
+  );
+}
+
+function MenuBtn({
+  icon: Icon,
+  label,
+  onClick,
+  className,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-3 px-4 py-2.5 text-sm text-ink hover:bg-paper transition-colors text-left",
+        className
+      )}
+    >
+      <Icon size={16} className="shrink-0" />
+      {label}
+    </button>
   );
 }
