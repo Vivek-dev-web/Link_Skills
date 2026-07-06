@@ -5,14 +5,18 @@ import Link from "next/link";
 import {
   Search, Users, Briefcase, PlusCircle, Eye, MessageCircle,
   MapPin, Star, CheckCircle2, Filter, TrendingUp, ChevronRight,
-  FileText, Loader2,
+  FileText, Loader2, Award, Trash2, X,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
 
-type RecruiterTab = "post" | "candidates" | "pipeline";
+type RecruiterTab = "post" | "candidates" | "pipeline" | "assessments";
 
 const SKILL_OPTIONS = ["AWS", "Azure", "Python", "Databricks", "Spark", "Terraform", "Docker", "Kubernetes", "SQL", "React", "Node.js", "Java"];
+
+const ASSESS_CATEGORIES = ["Cloud", "Programming", "Database", "Big Data", "DevOps", "ML/AI"];
+const BLANK_ASSESSMENT = { skill: "", category: "Cloud", questions: 20, duration: 30, difficulty: "Intermediate" as const, featured: false };
+const STORAGE_KEY = "atlas_custom_assessments";
 
 const MOCK_PIPELINE = [
   { id: "p1", title: "Senior Data Engineer",  applicants: 24, viewed: 18, shortlisted: 6, interviews: 3 },
@@ -30,6 +34,34 @@ export default function HirePage() {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [candidateTotal, setCandidateTotal] = useState(0);
   const [candidateLoading, setCandidateLoading] = useState(false);
+
+  const [customAssessments, setCustomAssessments] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [assessForm, setAssessForm] = useState(BLANK_ASSESSMENT);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setCustomAssessments(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  function saveAssessments(list: any[]) {
+    setCustomAssessments(list);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  function addAssessment() {
+    if (!assessForm.skill.trim()) return;
+    const newA = { ...assessForm, id: `custom_${Date.now()}`, custom: true };
+    saveAssessments([...customAssessments, newA]);
+    setAssessForm(BLANK_ASSESSMENT);
+    setShowAddForm(false);
+  }
+
+  function deleteAssessment(id: string) {
+    saveAssessments(customAssessments.filter((a) => a.id !== id));
+  }
 
   function toggleSkill(s: string) {
     setSelectedSkills((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
@@ -76,23 +108,26 @@ export default function HirePage() {
       </div>
 
       {/* Tab nav */}
-      <div className="flex rounded-xl border border-border overflow-hidden">
-        {([
-          { id: "post",       label: "Post a Job",      icon: PlusCircle },
-          { id: "candidates", label: "Find Candidates",  icon: Users      },
-          { id: "pipeline",   label: "My Pipeline",      icon: TrendingUp },
-        ] as const).map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors",
-              tab === id ? "bg-ink text-paper" : "text-muted hover:bg-paper"
-            )}
-          >
-            <Icon size={13} /> {label}
-          </button>
-        ))}
+      <div className="rounded-xl border border-border overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4">
+          {([
+            { id: "post",        label: "Post a Job",      icon: PlusCircle },
+            { id: "candidates",  label: "Find Candidates",  icon: Users      },
+            { id: "pipeline",    label: "My Pipeline",      icon: TrendingUp },
+            { id: "assessments", label: "Assessments",      icon: Award      },
+          ] as const).map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={cn(
+                "flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors border-b sm:border-b-0 border-border last:border-b-0",
+                tab === id ? "bg-ink text-paper" : "text-muted hover:bg-paper"
+              )}
+            >
+              <Icon size={13} /> {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── POST A JOB ── */}
@@ -292,6 +327,196 @@ export default function HirePage() {
         </div>
       )}
 
+      {/* ── ASSESSMENTS ── */}
+      {tab === "assessments" && (
+        <div className="space-y-5">
+          {/* Summary bar */}
+          <div className="card p-4 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="font-display text-base text-ink">Manage Skill Assessments</p>
+              <p className="text-xs text-muted mt-0.5">
+                {customAssessments.length} custom · 10 built-in · visible on the Assessments page
+              </p>
+            </div>
+            <button
+              onClick={() => { setAssessForm(BLANK_ASSESSMENT); setShowAddForm(true); }}
+              className="btn-accent btn-sm gap-1"
+            >
+              <PlusCircle size={13} /> Add Assessment
+            </button>
+          </div>
+
+          {/* Add form */}
+          {showAddForm && (
+            <div className="card p-5 space-y-4 border-2 border-teal/30">
+              <div className="flex items-center justify-between">
+                <p className="font-display text-base text-ink">New Assessment</p>
+                <button onClick={() => setShowAddForm(false)} className="p-1 text-muted hover:text-ink">
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="label">Skill / Assessment Name <span className="text-coral">*</span></label>
+                  <input
+                    className="input"
+                    placeholder="e.g. React Fundamentals"
+                    value={assessForm.skill}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, skill: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="label">Category</label>
+                  <select
+                    className="input"
+                    value={assessForm.category}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, category: e.target.value }))}
+                  >
+                    {ASSESS_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Difficulty</label>
+                  <select
+                    className="input"
+                    value={assessForm.difficulty}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, difficulty: e.target.value as any }))}
+                  >
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Number of Questions</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={5}
+                    max={100}
+                    value={assessForm.questions}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, questions: Number(e.target.value) }))}
+                  />
+                </div>
+                <div>
+                  <label className="label">Duration (minutes)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={5}
+                    max={180}
+                    value={assessForm.duration}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, duration: Number(e.target.value) }))}
+                  />
+                </div>
+                <div className="sm:col-span-2 flex items-center gap-2">
+                  <input
+                    id="featured-toggle"
+                    type="checkbox"
+                    className="accent-teal w-4 h-4"
+                    checked={assessForm.featured}
+                    onChange={(e) => setAssessForm((f) => ({ ...f, featured: e.target.checked }))}
+                  />
+                  <label htmlFor="featured-toggle" className="text-sm text-ink cursor-pointer">
+                    Mark as <span className="font-medium">Featured</span> (appears in top Featured section)
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={addAssessment}
+                  disabled={!assessForm.skill.trim()}
+                  className="btn-accent flex-1 disabled:opacity-50"
+                >
+                  Save Assessment
+                </button>
+                <button onClick={() => setShowAddForm(false)} className="btn-outline btn-sm">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Custom assessments list */}
+          {customAssessments.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Your custom assessments</p>
+              <div className="card divide-y divide-border">
+                {customAssessments.map((a) => (
+                  <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="h-8 w-8 rounded-lg bg-teal-light flex items-center justify-center shrink-0">
+                      <Award size={15} className="text-teal" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-ink">{a.skill}</p>
+                        <span className="chip-teal !py-0 !px-1.5 !text-[10px]">Custom</span>
+                        {a.featured && <span className="chip-amber !py-0 !px-1.5 !text-[10px]">Featured</span>}
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">
+                        {a.category} · {a.questions} Q · {a.duration} min ·{" "}
+                        <span className={
+                          a.difficulty === "Beginner" ? "text-teal" :
+                          a.difficulty === "Intermediate" ? "text-amber" : "text-coral"
+                        }>
+                          {a.difficulty}
+                        </span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => deleteAssessment(a.id)}
+                      className="p-1.5 text-muted hover:text-coral rounded-lg hover:bg-coral-light transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {customAssessments.length === 0 && !showAddForm && (
+            <div className="text-center py-10 text-muted text-sm">
+              No custom assessments yet. Click <span className="font-medium text-teal">Add Assessment</span> to create one.
+            </div>
+          )}
+
+          {/* Built-in list (read-only reference) */}
+          <div>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Built-in assessments (read-only)</p>
+            <div className="card divide-y divide-border opacity-70">
+              {[
+                { skill: "Azure Fundamentals",        category: "Cloud",       difficulty: "Intermediate" },
+                { skill: "AWS Cloud Practitioner",     category: "Cloud",       difficulty: "Beginner"     },
+                { skill: "Python for Data Engineering",category: "Programming", difficulty: "Intermediate" },
+                { skill: "SQL Proficiency",            category: "Database",    difficulty: "Beginner"     },
+                { skill: "Databricks Associate",       category: "Big Data",    difficulty: "Advanced"     },
+                { skill: "Terraform Basics",           category: "DevOps",      difficulty: "Beginner"     },
+                { skill: "Docker & Containers",        category: "DevOps",      difficulty: "Intermediate" },
+                { skill: "Kubernetes Essentials",      category: "DevOps",      difficulty: "Advanced"     },
+                { skill: "Apache Spark",               category: "Big Data",    difficulty: "Intermediate" },
+                { skill: "Deep Learning Fundamentals", category: "ML/AI",       difficulty: "Advanced"     },
+              ].map((a) => (
+                <div key={a.skill} className="flex items-center gap-3 px-4 py-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-paper flex items-center justify-center shrink-0">
+                    <Award size={13} className="text-muted" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-ink">{a.skill}</p>
+                    <p className="text-xs text-muted">{a.category} · <span className={
+                      a.difficulty === "Beginner" ? "text-teal" :
+                      a.difficulty === "Intermediate" ? "text-amber" : "text-coral"
+                    }>{a.difficulty}</span></p>
+                  </div>
+                  <span className="text-[11px] text-muted">Built-in</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── PIPELINE ── */}
       {tab === "pipeline" && (
         <div className="space-y-4">
@@ -327,9 +552,9 @@ export default function HirePage() {
                 <div className="bg-teal" style={{ width: `${(job.interviews / job.applicants) * 100}%` }} />
               </div>
               <div className="flex justify-end mt-3">
-                <button className="btn-outline btn-sm gap-1">
+                <Link href="/jobs/manage" className="btn-outline btn-sm gap-1">
                   View applicants <ChevronRight size={12} />
-                </button>
+                </Link>
               </div>
             </div>
           ))}

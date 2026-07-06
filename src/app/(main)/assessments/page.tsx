@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Award, Clock, CheckCircle2, TrendingUp, Star,
   Trophy, BarChart2, ChevronRight, X,
@@ -154,9 +154,16 @@ export default function AssessmentsPage() {
   const [category, setCategory] = useState("All");
   const [activeTest, setActiveTest] = useState<Assessment | null>(null);
   const [results, setResults] = useState<Record<string, { score: number; percentile: number }>>({});
+  const [customAssessments, setCustomAssessments] = useState<Assessment[]>([]);
 
-  // Seed from pre-completed mock data
-  const allAssessments = ASSESSMENTS.map((a) => ({
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("atlas_custom_assessments");
+      if (stored) setCustomAssessments(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const allAssessments = [...ASSESSMENTS, ...customAssessments].map((a) => ({
     ...a,
     completed: a.completed || !!results[a.id],
     score: results[a.id]?.score ?? a.score,
@@ -197,7 +204,7 @@ export default function AssessmentsPage() {
           </span>
           <span className="flex items-center gap-1.5 text-white/90">
             <TrendingUp size={14} />
-            {allAssessments.length} available
+            {allAssessments.length} available ({customAssessments.length} custom)
           </span>
         </div>
       </div>
@@ -212,7 +219,10 @@ export default function AssessmentsPage() {
                 <div className="h-9 w-9 rounded-lg bg-brand-light flex items-center justify-center">
                   <Award size={18} className="text-brand-mid" />
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 flex-wrap justify-end">
+                  {(a as any).custom && (
+                    <span className="chip !py-0.5 !px-2 !text-[10px] border border-teal/40 text-teal bg-teal-light">Custom</span>
+                  )}
                   {a.completed && (
                     <span className="chip-teal !py-0.5 !px-2 !text-[10px] flex items-center gap-1">
                       <CheckCircle2 size={10} /> Verified
@@ -275,6 +285,9 @@ export default function AssessmentsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-ink">{a.skill}</p>
+                    {(a as any).custom && (
+                      <span className="chip !py-0 !px-1.5 !text-[10px] border border-teal/40 text-teal bg-teal-light">Custom</span>
+                    )}
                     {a.completed && (
                       <span className="chip-teal !py-0 !px-1.5 !text-[10px] flex items-center gap-0.5">
                         <CheckCircle2 size={9} /> Verified
