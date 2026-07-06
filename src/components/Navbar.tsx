@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -89,11 +90,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
         {/* Logo */}
         <Link href="/feed" className="text-ink shrink-0">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="14" cy="14" r="12.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M18.5 9.5L13 13L9.5 18.5L15 15L18.5 9.5Z" fill="#00C4A7" stroke="#00C4A7" strokeLinejoin="round" />
-            <circle cx="14" cy="14" r="1.4" fill="currentColor" />
-          </svg>
+          <Logo />
         </Link>
 
         {/* Search */}
