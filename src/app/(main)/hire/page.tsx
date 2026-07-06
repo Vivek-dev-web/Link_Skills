@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Search, Users, Briefcase, PlusCircle, Eye, MessageCircle,
   MapPin, Star, CheckCircle2, Filter, TrendingUp, ChevronRight,
-  FileText,
+  FileText, Loader2,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
@@ -13,14 +13,6 @@ import { cn } from "@/lib/utils";
 type RecruiterTab = "post" | "candidates" | "pipeline";
 
 const SKILL_OPTIONS = ["AWS", "Azure", "Python", "Databricks", "Spark", "Terraform", "Docker", "Kubernetes", "SQL", "React", "Node.js", "Java"];
-
-const MOCK_CANDIDATES = [
-  { id: "c1", name: "Priya Menon",   headline: "Senior Data Engineer · 6 yrs exp",   location: "Bengaluru", skills: ["Python", "Databricks", "AWS"],      exp: "6 yrs",  salary: "30–40 LPA", available: "Immediately", score: 94 },
-  { id: "c2", name: "Arjun Kapoor",  headline: "Cloud Architect · 8 yrs exp",         location: "Hyderabad", skills: ["Azure", "Terraform", "Kubernetes"], exp: "8 yrs",  salary: "40–55 LPA", available: "1 month",      score: 89 },
-  { id: "c3", name: "Riya Desai",    headline: "ML Engineer · 4 yrs exp",             location: "Mumbai",    skills: ["Python", "TensorFlow", "AWS"],      exp: "4 yrs",  salary: "25–35 LPA", available: "2 months",     score: 82 },
-  { id: "c4", name: "Vikram Singh",  headline: "DevOps Lead · 7 yrs exp",             location: "Pune",      skills: ["Docker", "Kubernetes", "AWS"],      exp: "7 yrs",  salary: "35–45 LPA", available: "1 month",      score: 91 },
-  { id: "c5", name: "Ananya Bose",   headline: "Data Scientist · 3 yrs exp",          location: "Remote",    skills: ["Python", "SQL", "Spark"],           exp: "3 yrs",  salary: "18–28 LPA", available: "Immediately",  score: 78 },
-];
 
 const MOCK_PIPELINE = [
   { id: "p1", title: "Senior Data Engineer",  applicants: 24, viewed: 18, shortlisted: 6, interviews: 3 },
@@ -35,18 +27,30 @@ export default function HirePage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [minExp, setMinExp] = useState("");
   const [contactedIds, setContactedIds] = useState<Set<string>>(new Set());
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [candidateTotal, setCandidateTotal] = useState(0);
+  const [candidateLoading, setCandidateLoading] = useState(false);
 
   function toggleSkill(s: string) {
     setSelectedSkills((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
   }
 
-  const filteredCandidates = MOCK_CANDIDATES.filter((c) => {
-    if (candidateSearch && !c.name.toLowerCase().includes(candidateSearch.toLowerCase()) &&
-        !c.headline.toLowerCase().includes(candidateSearch.toLowerCase())) return false;
-    if (candidateLocation && !c.location.toLowerCase().includes(candidateLocation.toLowerCase())) return false;
-    if (selectedSkills.length > 0 && !selectedSkills.some((s) => c.skills.includes(s))) return false;
-    return true;
-  });
+  const fetchCandidates = useCallback(async () => {
+    setCandidateLoading(true);
+    const params = new URLSearchParams();
+    if (candidateSearch) params.set("q", candidateSearch);
+    if (candidateLocation) params.set("location", candidateLocation);
+    if (selectedSkills.length === 1) params.set("skill", selectedSkills[0]);
+    const res = await fetch(`/api/users?${params}`);
+    const data = await res.json();
+    setCandidates(data.users ?? []);
+    setCandidateTotal(data.total ?? 0);
+    setCandidateLoading(false);
+  }, [candidateSearch, candidateLocation, selectedSkills]);
+
+  useEffect(() => {
+    if (tab === "candidates") fetchCandidates();
+  }, [tab, fetchCandidates]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -232,37 +236,42 @@ export default function HirePage() {
               </div>
             </div>
 
-            <p className="text-xs text-muted">{filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? "s" : ""} found</p>
+            <p className="text-xs text-muted">
+              {candidateLoading ? "Searching…" : `${candidateTotal} candidate${candidateTotal !== 1 ? "s" : ""} found`}
+            </p>
 
-            {filteredCandidates.map((c) => (
+            {candidateLoading && (
+              <div className="flex justify-center py-8">
+                <Loader2 size={20} className="animate-spin text-muted" />
+              </div>
+            )}
+
+            {!candidateLoading && candidates.map((c) => (
               <div key={c.id} className="card p-4">
                 <div className="flex items-start gap-3">
-                  <Avatar name={c.name} size="md" />
+                  <Avatar name={c.name} src={c.image} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <p className="font-medium text-sm text-ink">{c.name}</p>
-                      <span className="chip-teal !py-0.5 !px-2 !text-[11px] flex items-center gap-1">
-                        <Star size={10} className="fill-teal" /> {c.score}% match
-                      </span>
                     </div>
                     <p className="text-xs text-muted">{c.headline}</p>
                     <div className="flex gap-3 mt-1 text-xs text-muted flex-wrap">
-                      <span className="flex items-center gap-1"><MapPin size={10} />{c.location}</span>
-                      <span>{c.exp} exp</span>
-                      <span>{c.salary}</span>
-                      <span>Available: {c.available}</span>
+                      {c.location && <span className="flex items-center gap-1"><MapPin size={10} />{c.location}</span>}
+                      {c.currentCompany && <span>{c.currentCompany}</span>}
                     </div>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {c.skills.map((s) => (
-                        <span key={s} className="chip !py-0 !px-1.5 !text-[11px]">{s}</span>
-                      ))}
-                    </div>
+                    {c.skills?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {c.skills.map((s: any) => (
+                          <span key={s.skill.name} className="chip !py-0 !px-1.5 !text-[11px]">{s.skill.name}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="btn-outline btn-sm gap-1">
+                  <Link href={`/profile/${c.id}`} className="btn-outline btn-sm gap-1">
                     <Eye size={12} /> View profile
-                  </button>
+                  </Link>
                   <button
                     onClick={() => setContactedIds((s) => new Set([...s, c.id]))}
                     className={cn("btn-sm gap-1", contactedIds.has(c.id) ? "btn-outline text-teal border-teal" : "btn-accent")}
@@ -272,12 +281,13 @@ export default function HirePage() {
                       ? <><CheckCircle2 size={12} /> Contacted</>
                       : <><MessageCircle size={12} /> Contact</>}
                   </button>
-                  <button className="btn-ghost btn-sm text-muted gap-1">
-                    <FileText size={12} /> Resume
-                  </button>
                 </div>
               </div>
             ))}
+
+            {!candidateLoading && candidates.length === 0 && (
+              <div className="text-center py-10 text-muted text-sm">No candidates found. Try a different search.</div>
+            )}
           </div>
         </div>
       )}

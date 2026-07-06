@@ -24,9 +24,11 @@ export async function GET(req: Request) {
   if (q) {
     AND.push({
       OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { headline: { contains: q, mode: "insensitive" } },
-        { currentRole: { contains: q, mode: "insensitive" } },
+        { name:           { contains: q, mode: "insensitive" } },
+        { headline:       { contains: q, mode: "insensitive" } },
+        { currentRole:    { contains: q, mode: "insensitive" } },
+        { email:          { contains: q, mode: "insensitive" } },
+        { currentCompany: { contains: q, mode: "insensitive" } },
       ],
     });
   }
@@ -46,6 +48,8 @@ export async function GET(req: Request) {
         currentRole: true,
         currentCompany: true,
         location: true,
+        skills: { select: { skill: { select: { name: true } } }, take: 5 },
+        _count: { select: { experiences: true } },
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
