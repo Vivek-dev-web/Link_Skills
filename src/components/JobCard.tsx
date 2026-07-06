@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Briefcase, Bookmark } from "lucide-react";
+import { MapPin, Briefcase, Heart } from "lucide-react";
 import { formatSalary, formatRelativeTime } from "@/lib/utils";
 import { WORK_TYPE_LABELS, EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -37,8 +37,15 @@ export default function JobCard({
           </div>
         </Link>
         {onToggleSave && (
-          <button onClick={() => onToggleSave(job.id)} className={cn("p-1.5 rounded-full hover:bg-paper", saved && "text-coral")}>
-            <Bookmark size={16} className={saved ? "fill-coral" : ""} />
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleSave(job.id); }}
+            className={cn(
+              "relative z-20 p-1.5 rounded-full transition-colors shrink-0",
+              saved ? "text-coral bg-coral-light" : "text-muted hover:text-coral hover:bg-coral-light"
+            )}
+            title={saved ? "Remove from saved" : "Save job"}
+          >
+            <Heart size={16} className={saved ? "fill-coral" : ""} strokeWidth={saved ? 2.4 : 1.8} />
           </button>
         )}
       </div>

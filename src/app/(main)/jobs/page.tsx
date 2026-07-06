@@ -332,12 +332,12 @@ export default function JobsPage() {
                 {jobs.map((j, idx) => (
                   <div key={j.id} className="relative">
                     {idx === 0 && (
-                      <span className="absolute top-3 right-3 z-10 chip-amber !py-0.5 !px-2 !text-[10px]">
+                      <span className="absolute top-3 left-3 z-10 chip-amber !py-0.5 !px-2 !text-[10px]">
                         <Star size={9} /> Featured
                       </span>
                     )}
                     {idx === 2 && (
-                      <span className="absolute top-3 right-3 z-10 chip-coral !py-0.5 !px-2 !text-[10px]">
+                      <span className="absolute top-3 left-3 z-10 chip-coral !py-0.5 !px-2 !text-[10px]">
                         Promoted
                       </span>
                     )}
