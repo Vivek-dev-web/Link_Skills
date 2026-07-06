@@ -86,13 +86,17 @@ export async function POST(req: Request) {
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
 
-  const post = await prisma.post.create({
-    data: { ...parsed.data, authorId: session.user.id },
-    include: {
-      author: { select: { id: true, name: true, image: true, headline: true } },
-      _count: { select: { likes: true, comments: true } },
-    },
-  });
-
-  return NextResponse.json({ ...post, likeCount: 0, commentCount: 0, likedByMe: false });
+  try {
+    const post = await prisma.post.create({
+      data: { ...parsed.data, authorId: session.user.id },
+      include: {
+        author: { select: { id: true, name: true, image: true, headline: true } },
+        _count: { select: { likes: true, comments: true } },
+      },
+    });
+    return NextResponse.json({ ...post, likeCount: 0, commentCount: 0, likedByMe: false });
+  } catch (err: any) {
+    console.error("POST /api/posts error:", err);
+    return NextResponse.json({ error: "Failed to create post. Try signing out and back in." }, { status: 500 });
+  }
 }
