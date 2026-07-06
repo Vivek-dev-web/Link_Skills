@@ -12,7 +12,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["skillmaster"]
+  schemas   = ["jobwarehouse"]
 }
 
 // ───────────────────────── Users & Profiles ─────────────────────────
@@ -74,7 +74,7 @@ model User {
   notificationPrefs NotificationPreference?
   passwordResets    PasswordResetToken[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Experience {
@@ -90,7 +90,7 @@ model Experience {
   description String?
   createdAt   DateTime  @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Education {
@@ -105,7 +105,7 @@ model Education {
   description String?
   createdAt   DateTime  @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Skill {
@@ -115,7 +115,7 @@ model Skill {
   jobSkills    JobSkill[]
   courseSkills CourseSkill[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model UserSkill {
@@ -128,7 +128,7 @@ model UserSkill {
   source       String  @default("manual") // manual | course:<courseId>
 
   @@unique([userId, skillId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Connections / Follow ─────────────────────────
@@ -144,7 +144,7 @@ model Connection {
   updatedAt   DateTime @updatedAt
 
   @@unique([requesterId, addresseeId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Follow {
@@ -156,7 +156,7 @@ model Follow {
   createdAt  DateTime @default(now())
 
   @@unique([followerId, followeeId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Block {
@@ -168,7 +168,7 @@ model Block {
   createdAt DateTime @default(now())
 
   @@unique([blockerId, blockedId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Feed ─────────────────────────
@@ -187,7 +187,7 @@ model Post {
   savedBy     SavedPost[]
   reports     Report[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Like {
@@ -199,7 +199,7 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Comment {
@@ -212,7 +212,7 @@ model Comment {
   createdAt DateTime      @default(now())
   likes     CommentLike[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model CommentLike {
@@ -224,7 +224,7 @@ model CommentLike {
   createdAt DateTime @default(now())
 
   @@unique([commentId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Notifications ─────────────────────────
@@ -239,7 +239,7 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model NotificationPreference {
@@ -257,7 +257,7 @@ model NotificationPreference {
   messagesEmail       Boolean @default(true)
   messagesInApp       Boolean @default(true)
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Messaging ─────────────────────────
@@ -269,7 +269,7 @@ model Conversation {
   createdAt    DateTime                   @default(now())
   updatedAt    DateTime                   @updatedAt
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model ConversationParticipant {
@@ -282,7 +282,7 @@ model ConversationParticipant {
   typingAt       DateTime?
 
   @@unique([conversationId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Message {
@@ -294,7 +294,7 @@ model Message {
   content        String
   createdAt      DateTime     @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Companies & Jobs ─────────────────────────
@@ -312,7 +312,7 @@ model Company {
   jobs      Job[]
   createdAt DateTime        @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model CompanyMember {
@@ -324,7 +324,7 @@ model CompanyMember {
   role      String  @default("RECRUITER")
 
   @@unique([companyId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Job {
@@ -351,7 +351,7 @@ model Job {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model JobSkill {
@@ -362,7 +362,7 @@ model JobSkill {
   skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, skillId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Application {
@@ -378,7 +378,7 @@ model Application {
   updatedAt   DateTime @updatedAt
 
   @@unique([jobId, applicantId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model SavedJob {
@@ -390,7 +390,7 @@ model SavedJob {
   createdAt DateTime @default(now())
 
   @@unique([jobId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model SavedPost {
@@ -402,7 +402,7 @@ model SavedPost {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Training / Learning ─────────────────────────
@@ -424,7 +424,7 @@ model Course {
   certificates    Certificate[]
   createdAt       DateTime       @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model CourseSkill {
@@ -435,7 +435,7 @@ model CourseSkill {
   skill    Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, skillId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Module {
@@ -446,7 +446,7 @@ model Module {
   order    Int
   lessons  Lesson[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Lesson {
@@ -460,7 +460,7 @@ model Lesson {
   durationMinutes Int              @default(5)
   progress        LessonProgress[]
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Enrollment {
@@ -475,7 +475,7 @@ model Enrollment {
   createdAt       DateTime  @default(now())
 
   @@unique([courseId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model LessonProgress {
@@ -488,7 +488,7 @@ model LessonProgress {
   completedAt DateTime?
 
   @@unique([lessonId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model Certificate {
@@ -502,7 +502,7 @@ model Certificate {
   fileUrl    String?
 
   @@unique([userId, courseId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 model CourseReview {
@@ -516,7 +516,7 @@ model CourseReview {
   createdAt DateTime @default(now())
 
   @@unique([courseId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Reports ─────────────────────────
@@ -532,7 +532,7 @@ model Report {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
 
 // ───────────────────────── Auth helpers ─────────────────────────
@@ -546,5 +546,5 @@ model PasswordResetToken {
   usedAt    DateTime?
   createdAt DateTime @default(now())
 
-  @@schema("skillmaster")
+  @@schema("jobwarehouse")
 }
