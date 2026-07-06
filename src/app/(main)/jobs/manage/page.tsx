@@ -84,9 +84,11 @@ export default function ManageJobsPage() {
               >
                 <Zap size={12} /> Promoted
               </button>
-              <span className="flex items-center gap-1 text-sm text-ink font-mono ml-1">
-                <Users2 size={14} /> {j._count?.applications ?? 0}
-              </span>
+              <Link href={`/jobs/manage/${j.id}`}
+                className="flex items-center gap-1 text-sm font-medium text-teal hover:underline ml-1"
+                title="View applicants">
+                <Users2 size={14} /> {j._count?.applications ?? 0} applicant{(j._count?.applications ?? 0) !== 1 ? "s" : ""}
+              </Link>
             </div>
           </div>
         ))}

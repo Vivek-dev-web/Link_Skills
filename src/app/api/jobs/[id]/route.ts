@@ -32,7 +32,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     ]);
     hasApplied = !!application;
     isSaved = !!saved;
-    canManage = !!member;
+    canManage = !!member || job.postedById === session.user.id || (session.user as any).role === "ADMIN";
   }
 
   return NextResponse.json({ ...job, hasApplied, isSaved, canManage });
