@@ -43,6 +43,8 @@ const difficultyColor: Record<Difficulty, string> = {
   Advanced:     "chip-coral",
 };
 
+type Question = { text: string; opts: [string, string, string, string]; correct: number };
+
 type ModalProps = {
   assessment: Assessment;
   onClose: () => void;
@@ -50,10 +52,48 @@ type ModalProps = {
 };
 
 function TestModal({ assessment, onClose, onComplete }: ModalProps) {
-  const [step, setStep] = useState<"intro" | "q1" | "q2" | "result">("intro");
-  const [selected, setSelected] = useState<number | null>(null);
+  const customQs: Question[] = (assessment as any).questionItems ?? [];
+  const hasCustomQs = customQs.length > 0;
 
-  const mockResult = { score: Math.floor(70 + Math.random() * 28), percentile: Math.floor(60 + Math.random() * 35) };
+  const [step, setStep] = useState<"intro" | "question" | "q1" | "q2" | "result">("intro");
+  const [qIdx, setQIdx] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [finalScore, setFinalScore] = useState({ score: 0, percentile: 0 });
+
+  const [mockResult] = useState(() => ({
+    score: Math.floor(70 + Math.random() * 28),
+    percentile: Math.floor(60 + Math.random() * 35),
+  }));
+
+  function startAssessment() {
+    if (hasCustomQs) {
+      setQIdx(0);
+      setAnswers([]);
+      setSelected(null);
+      setStep("question");
+    } else {
+      setStep("q1");
+    }
+  }
+
+  function nextQuestion() {
+    if (selected === null) return;
+    const newAnswers = [...answers, selected];
+    if (qIdx < customQs.length - 1) {
+      setAnswers(newAnswers);
+      setQIdx(qIdx + 1);
+      setSelected(null);
+    } else {
+      const correct = customQs.filter((q, i) => newAnswers[i] === q.correct).length;
+      const score = Math.round((correct / customQs.length) * 100);
+      const percentile = Math.floor(50 + Math.random() * 40);
+      setFinalScore({ score, percentile });
+      setStep("result");
+    }
+  }
+
+  const result = hasCustomQs ? finalScore : mockResult;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
@@ -67,7 +107,7 @@ function TestModal({ assessment, onClose, onComplete }: ModalProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
               {[
-                { label: "Questions", value: assessment.questions },
+                { label: "Questions", value: hasCustomQs ? customQs.length : assessment.questions },
                 { label: "Duration",  value: `${assessment.duration}m` },
                 { label: "Level",     value: assessment.difficulty },
               ].map(({ label, value }) => (
@@ -80,10 +120,46 @@ function TestModal({ assessment, onClose, onComplete }: ModalProps) {
             <p className="text-xs text-muted">
               This is a timed assessment. Once started, the timer cannot be paused. A passing score earns you a verified badge on your profile.
             </p>
-            <button onClick={() => setStep("q1")} className="btn-accent w-full">Start assessment</button>
+            <button onClick={startAssessment} className="btn-accent w-full">Start assessment</button>
           </div>
         )}
 
+        {/* Custom questions */}
+        {step === "question" && hasCustomQs && (
+          <div className="space-y-4">
+            <div className="flex justify-between text-xs text-muted">
+              <span>Question {qIdx + 1} of {customQs.length}</span>
+              <span className="flex items-center gap-1 text-coral"><Clock size={12} /> {assessment.duration}:00</span>
+            </div>
+            <div className="w-full bg-paper rounded-full h-1.5">
+              <div className="bg-teal h-1.5 rounded-full transition-all" style={{ width: `${((qIdx) / customQs.length) * 100}%` }} />
+            </div>
+            <p className="text-sm text-ink font-medium">{customQs[qIdx].text}</p>
+            <div className="space-y-2">
+              {customQs[qIdx].opts.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelected(i)}
+                  className={cn(
+                    "w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors",
+                    selected === i ? "border-teal bg-teal-light text-teal-dark" : "border-border hover:border-teal/50"
+                  )}
+                >
+                  <span className="font-semibold text-muted mr-2">{["A", "B", "C", "D"][i]}.</span>{opt}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={selected === null}
+              onClick={nextQuestion}
+              className="btn-accent w-full disabled:opacity-50"
+            >
+              {qIdx < customQs.length - 1 ? "Next" : "Finish"}
+            </button>
+          </div>
+        )}
+
+        {/* Built-in fallback questions */}
         {(step === "q1" || step === "q2") && (
           <div className="space-y-4">
             <div className="flex justify-between text-xs text-muted">
@@ -128,17 +204,17 @@ function TestModal({ assessment, onClose, onComplete }: ModalProps) {
               <Trophy size={36} className="text-teal" />
             </div>
             <div>
-              <p className="font-display text-3xl text-ink">{mockResult.score}%</p>
-              <p className="text-sm text-muted">You scored better than <span className="font-semibold text-teal">{mockResult.percentile}%</span> of test takers</p>
+              <p className="font-display text-3xl text-ink">{result.score}%</p>
+              <p className="text-sm text-muted">You scored better than <span className="font-semibold text-teal">{result.percentile}%</span> of test takers</p>
             </div>
-            {mockResult.score >= 70 && (
+            {result.score >= 70 && (
               <div className="flex items-center justify-center gap-2 text-teal text-sm">
                 <CheckCircle2 size={16} />
                 <span>Verified badge earned!</span>
               </div>
             )}
             <button
-              onClick={() => { onComplete(assessment.id, mockResult.score); onClose(); }}
+              onClick={() => { onComplete(assessment.id, result.score); onClose(); }}
               className="btn-accent w-full"
             >
               Done

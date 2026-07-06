@@ -15,7 +15,14 @@ type RecruiterTab = "post" | "candidates" | "pipeline" | "assessments";
 const SKILL_OPTIONS = ["AWS", "Azure", "Python", "Databricks", "Spark", "Terraform", "Docker", "Kubernetes", "SQL", "React", "Node.js", "Java"];
 
 const ASSESS_CATEGORIES = ["Cloud", "Programming", "Database", "Big Data", "DevOps", "ML/AI"];
-const BLANK_ASSESSMENT = { skill: "", category: "Cloud", questions: 20, duration: 30, difficulty: "Intermediate" as const, featured: false };
+
+type Question = { text: string; opts: [string, string, string, string]; correct: number };
+const BLANK_QUESTION: Question = { text: "", opts: ["", "", "", ""], correct: 0 };
+const BLANK_ASSESSMENT = {
+  skill: "", category: "Cloud", questions: 20, duration: 30,
+  difficulty: "Intermediate" as const, featured: false,
+  questionItems: [] as Question[],
+};
 const STORAGE_KEY = "atlas_custom_assessments";
 
 
@@ -36,6 +43,7 @@ export default function HirePage() {
   const [customAssessments, setCustomAssessments] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [assessForm, setAssessForm] = useState(BLANK_ASSESSMENT);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     try {
@@ -60,10 +68,27 @@ export default function HirePage() {
 
   function addAssessment() {
     if (!assessForm.skill.trim()) return;
-    const newA = { ...assessForm, id: `custom_${Date.now()}`, custom: true };
+    const qs = assessForm.questionItems;
+    const newA = {
+      ...assessForm,
+      questions: qs.length > 0 ? qs.length : assessForm.questions,
+      id: `custom_${Date.now()}`,
+      custom: true,
+    };
     saveAssessments([...customAssessments, newA]);
     setAssessForm(BLANK_ASSESSMENT);
+    setEditingQuestion(null);
     setShowAddForm(false);
+  }
+
+  function commitQuestion() {
+    if (!editingQuestion || !editingQuestion.text.trim() || editingQuestion.opts.some((o) => !o.trim())) return;
+    setAssessForm((f) => ({ ...f, questionItems: [...f.questionItems, editingQuestion] }));
+    setEditingQuestion({ ...BLANK_QUESTION });
+  }
+
+  function removeQuestion(idx: number) {
+    setAssessForm((f) => ({ ...f, questionItems: f.questionItems.filter((_, i) => i !== idx) }));
   }
 
   function deleteAssessment(id: string) {
@@ -429,6 +454,92 @@ export default function HirePage() {
                   </label>
                 </div>
               </div>
+              {/* Questions section */}
+              <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-ink">
+                    Questions{assessForm.questionItems.length > 0 && ` (${assessForm.questionItems.length})`}
+                  </p>
+                  {editingQuestion === null && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingQuestion({ ...BLANK_QUESTION })}
+                      className="btn-outline btn-sm gap-1"
+                    >
+                      <PlusCircle size={12} /> Add question
+                    </button>
+                  )}
+                </div>
+
+                {/* Question list */}
+                {assessForm.questionItems.map((q, i) => (
+                  <div key={i} className="flex items-start gap-2 px-3 py-2 bg-paper rounded-lg border border-border">
+                    <span className="text-xs font-mono text-muted shrink-0 mt-0.5">Q{i + 1}</span>
+                    <p className="text-xs text-ink flex-1 line-clamp-2">{q.text}</p>
+                    <span className="text-[10px] text-teal shrink-0 mt-0.5">✓ {q.opts[q.correct].slice(0, 12)}{q.opts[q.correct].length > 12 ? "…" : ""}</span>
+                    <button onClick={() => removeQuestion(i)} className="p-0.5 text-muted hover:text-coral shrink-0">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Inline question editor */}
+                {editingQuestion !== null && (
+                  <div className="border border-teal/30 rounded-xl p-4 space-y-3 bg-paper">
+                    <p className="text-xs font-semibold text-ink">New question</p>
+                    <textarea
+                      className="textarea text-sm"
+                      rows={2}
+                      placeholder="Enter the question text…"
+                      value={editingQuestion.text}
+                      onChange={(e) => setEditingQuestion((q) => q ? { ...q, text: e.target.value } : q)}
+                    />
+                    <div className="space-y-2">
+                      {(["A", "B", "C", "D"] as const).map((letter, i) => (
+                        <div key={letter} className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="correct-answer"
+                            checked={editingQuestion.correct === i}
+                            onChange={() => setEditingQuestion((q) => q ? { ...q, correct: i } : q)}
+                            className="accent-teal shrink-0"
+                            title="Mark as correct"
+                          />
+                          <span className="text-xs font-bold text-muted w-4 shrink-0">{letter}</span>
+                          <input
+                            className="input flex-1 !text-sm !py-1.5"
+                            placeholder={`Option ${letter}`}
+                            value={editingQuestion.opts[i]}
+                            onChange={(e) => {
+                              const opts = [...editingQuestion.opts] as [string, string, string, string];
+                              opts[i] = e.target.value;
+                              setEditingQuestion((q) => q ? { ...q, opts } : q);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted">Select the radio button next to the correct answer.</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={commitQuestion}
+                        disabled={!editingQuestion.text.trim() || editingQuestion.opts.some((o) => !o.trim())}
+                        className="btn-accent btn-sm disabled:opacity-50"
+                      >
+                        Add question
+                      </button>
+                      <button onClick={() => setEditingQuestion(null)} className="btn-outline btn-sm">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {assessForm.questionItems.length === 0 && editingQuestion === null && (
+                  <p className="text-xs text-muted">No questions added. Questions are optional — you can add them now or skip.</p>
+                )}
+              </div>
+
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={addAssessment}
