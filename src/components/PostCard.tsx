@@ -104,7 +104,7 @@ function CommentRow({
   );
 }
 
-export default function PostCard({ post, onDeleted }: { post: PostData; onDeleted?: (id: string) => void }) {
+export default function PostCard({ post, onDeleted, savedByMe }: { post: PostData; onDeleted?: (id: string) => void; savedByMe?: boolean }) {
   const { data: session } = useSession();
   const { show } = useToast();
   const [reaction, setReaction] = useState<Reaction | null>(post.likedByMe ? "like" : null);
@@ -115,7 +115,7 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
   const [commentCount, setCommentCount] = useState(post.commentCount);
   const [reposted, setReposted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(savedByMe ?? false);
   const [unfollowed, setUnfollowed] = useState(false);
   const [hidden, setHidden] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -179,10 +179,12 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
     show("Shared to your network", "success");
   }
 
-  function handleSave() {
-    setSaved((s) => !s);
-    show(saved ? "Removed from saved items" : "Saved to your list", "success");
+  async function handleSave() {
+    const next = !saved;
+    setSaved(next);
     setMenuOpen(false);
+    show(next ? "Saved to your list" : "Removed from saved items", "success");
+    await fetch(`/api/posts/${post.id}/save`, { method: "POST" });
   }
 
   function handleCopyLink() {

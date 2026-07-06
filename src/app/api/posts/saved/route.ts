@@ -6,18 +6,26 @@ export async function GET() {
   const session = await getCurrentSession();
   if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
 
-  const saved = await prisma.savedJob.findMany({
+  const saved = await prisma.savedPost.findMany({
     where: { userId: session.user.id },
     include: {
-      job: {
+      post: {
         include: {
-          company: { select: { id: true, name: true, logoUrl: true } },
-          skills: { include: { skill: true }, take: 4 },
+          author: { select: { id: true, name: true, image: true, headline: true } },
+          _count: { select: { likes: true, comments: true } },
         },
       },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ jobs: saved.map((s) => ({ ...s.job, savedAt: s.createdAt })) });
+  const posts = saved.map((s) => ({
+    ...s.post,
+    likeCount: s.post._count.likes,
+    commentCount: s.post._count.comments,
+    likedByMe: false,
+    savedAt: s.createdAt,
+  }));
+
+  return NextResponse.json({ posts });
 }

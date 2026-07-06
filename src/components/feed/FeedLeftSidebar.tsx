@@ -91,7 +91,7 @@ export default function FeedLeftSidebar() {
         </p>
         <nav className="space-y-0.5">
           {[
-            { href: "/jobs/saved",   icon: Bookmark,       label: "Saved items"  },
+            { href: "/saved",        icon: Bookmark,       label: "Saved items"  },
             { href: "/courses/mine", icon: GraduationCap,  label: "My Learning"  },
             { href: "/groups",       icon: Users2,         label: "Groups"       },
             { href: "/newsletters",  icon: Newspaper,      label: "Newsletters"  },
