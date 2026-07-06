@@ -28,6 +28,7 @@ import {
   Calendar,
   Building2,
   Newspaper,
+  BarChart2,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
@@ -166,6 +167,13 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
               >
                 <UserIcon size={16} /> View profile
+              </Link>
+              <Link
+                href="/analytics"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors"
+              >
+                <BarChart2 size={16} className="text-muted" /> Analytics
               </Link>
 
               <div className="px-3 py-1 mt-1">

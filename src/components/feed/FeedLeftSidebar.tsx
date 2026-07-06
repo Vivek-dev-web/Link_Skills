@@ -1,13 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Bookmark, GraduationCap, Users2, TrendingUp } from "lucide-react";
+import { Bookmark, GraduationCap, Users2, BarChart2, Calendar, Newspaper } from "lucide-react";
 import Avatar from "@/components/Avatar";
 
 export default function FeedLeftSidebar() {
   const { data: session } = useSession();
   const user = session?.user as any;
+  const [stats, setStats] = useState<{ impressions: number | null; followers: number | null }>({
+    impressions: null,
+    followers: null,
+  });
+
+  useEffect(() => {
+    fetch("/api/analytics")
+      .then((r) => r.json())
+      .then((d) => {
+        setStats({
+          impressions: d?.overview?.postImpressions7 ?? 0,
+          followers: d?.overview?.totalFollowers ?? 0,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <aside className="w-56 shrink-0 hidden xl:block sticky top-20 space-y-3 self-start">
@@ -33,18 +50,37 @@ export default function FeedLeftSidebar() {
             {user?.name}
           </Link>
           <p className="text-xs text-muted truncate mt-0.5">
-            {(user as any)?.headline ?? "Atlas member"}
+            {user?.headline ?? "Atlas member"}
           </p>
+
+          {/* Stats — clickable, link to /analytics */}
           <div className="mt-3 pt-3 border-t border-border space-y-1.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Profile views</span>
-              <span className="font-semibold text-teal">—</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted">Post impressions</span>
-              <span className="font-semibold text-teal">—</span>
-            </div>
+            <Link
+              href="/analytics?tab=content"
+              className="flex items-center justify-between group hover:text-teal transition-colors"
+            >
+              <span className="text-muted group-hover:text-teal">Post impressions</span>
+              <span className="font-semibold text-teal">
+                {stats.impressions === null ? "—" : stats.impressions}
+              </span>
+            </Link>
+            <Link
+              href="/analytics?tab=audience"
+              className="flex items-center justify-between group hover:text-teal transition-colors"
+            >
+              <span className="text-muted group-hover:text-teal">Followers</span>
+              <span className="font-semibold text-teal">
+                {stats.followers === null ? "—" : stats.followers}
+              </span>
+            </Link>
           </div>
+
+          <Link
+            href="/analytics"
+            className="mt-3 flex items-center justify-center gap-1.5 text-xs text-teal font-medium hover:underline"
+          >
+            <BarChart2 size={12} /> View full analytics
+          </Link>
         </div>
       </div>
 
@@ -55,10 +91,11 @@ export default function FeedLeftSidebar() {
         </p>
         <nav className="space-y-0.5">
           {[
-            { href: "/jobs/saved", icon: Bookmark, label: "Saved Jobs" },
-            { href: "/courses/mine", icon: GraduationCap, label: "My Learning" },
-            { href: "/connections", icon: Users2, label: "My Network" },
-            { href: "/feed", icon: TrendingUp, label: "Trending" },
+            { href: "/jobs/saved",   icon: Bookmark,       label: "Saved items"  },
+            { href: "/courses/mine", icon: GraduationCap,  label: "My Learning"  },
+            { href: "/groups",       icon: Users2,         label: "Groups"       },
+            { href: "/newsletters",  icon: Newspaper,      label: "Newsletters"  },
+            { href: "/events",       icon: Calendar,       label: "Events"       },
           ].map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
