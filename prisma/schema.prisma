@@ -4,13 +4,15 @@
 // validated in code — see src/lib/constants.ts for the canonical lists.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["skillmaster"]
 }
 
 // ───────────────────────── Users & Profiles ─────────────────────────
@@ -71,6 +73,8 @@ model User {
 
   notificationPrefs NotificationPreference?
   passwordResets    PasswordResetToken[]
+
+  @@schema("skillmaster")
 }
 
 model Experience {
@@ -85,6 +89,8 @@ model Experience {
   current     Boolean   @default(false)
   description String?
   createdAt   DateTime  @default(now())
+
+  @@schema("skillmaster")
 }
 
 model Education {
@@ -98,6 +104,8 @@ model Education {
   endDate     DateTime?
   description String?
   createdAt   DateTime  @default(now())
+
+  @@schema("skillmaster")
 }
 
 model Skill {
@@ -106,6 +114,8 @@ model Skill {
   userSkills   UserSkill[]
   jobSkills    JobSkill[]
   courseSkills CourseSkill[]
+
+  @@schema("skillmaster")
 }
 
 model UserSkill {
@@ -118,6 +128,7 @@ model UserSkill {
   source       String  @default("manual") // manual | course:<courseId>
 
   @@unique([userId, skillId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Connections / Follow ─────────────────────────
@@ -133,6 +144,7 @@ model Connection {
   updatedAt   DateTime @updatedAt
 
   @@unique([requesterId, addresseeId])
+  @@schema("skillmaster")
 }
 
 model Follow {
@@ -144,6 +156,7 @@ model Follow {
   createdAt  DateTime @default(now())
 
   @@unique([followerId, followeeId])
+  @@schema("skillmaster")
 }
 
 model Block {
@@ -155,6 +168,7 @@ model Block {
   createdAt DateTime @default(now())
 
   @@unique([blockerId, blockedId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Feed ─────────────────────────
@@ -172,8 +186,9 @@ model Post {
   comments    Comment[]
   savedBy     SavedPost[]
   reports     Report[]
-}
 
+  @@schema("skillmaster")
+}
 
 model Like {
   id        String   @id @default(cuid())
@@ -184,6 +199,7 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+  @@schema("skillmaster")
 }
 
 model Comment {
@@ -195,6 +211,8 @@ model Comment {
   content   String
   createdAt DateTime      @default(now())
   likes     CommentLike[]
+
+  @@schema("skillmaster")
 }
 
 model CommentLike {
@@ -206,6 +224,7 @@ model CommentLike {
   createdAt DateTime @default(now())
 
   @@unique([commentId, userId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Notifications ─────────────────────────
@@ -219,6 +238,8 @@ model Notification {
   link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@schema("skillmaster")
 }
 
 model NotificationPreference {
@@ -232,9 +253,11 @@ model NotificationPreference {
   jobsEmail           Boolean @default(true)
   jobsInApp           Boolean @default(true)
   coursesEmail        Boolean @default(true)
-  coursesInApp         Boolean @default(true)
+  coursesInApp        Boolean @default(true)
   messagesEmail       Boolean @default(true)
   messagesInApp       Boolean @default(true)
+
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Messaging ─────────────────────────
@@ -245,6 +268,8 @@ model Conversation {
   messages     Message[]
   createdAt    DateTime                   @default(now())
   updatedAt    DateTime                   @updatedAt
+
+  @@schema("skillmaster")
 }
 
 model ConversationParticipant {
@@ -257,6 +282,7 @@ model ConversationParticipant {
   typingAt       DateTime?
 
   @@unique([conversationId, userId])
+  @@schema("skillmaster")
 }
 
 model Message {
@@ -267,6 +293,8 @@ model Message {
   sender         User         @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
   content        String
   createdAt      DateTime     @default(now())
+
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Companies & Jobs ─────────────────────────
@@ -283,6 +311,8 @@ model Company {
   members   CompanyMember[]
   jobs      Job[]
   createdAt DateTime        @default(now())
+
+  @@schema("skillmaster")
 }
 
 model CompanyMember {
@@ -294,6 +324,7 @@ model CompanyMember {
   role      String  @default("RECRUITER")
 
   @@unique([companyId, userId])
+  @@schema("skillmaster")
 }
 
 model Job {
@@ -319,6 +350,8 @@ model Job {
   savedBy         SavedJob[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@schema("skillmaster")
 }
 
 model JobSkill {
@@ -329,6 +362,7 @@ model JobSkill {
   skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, skillId])
+  @@schema("skillmaster")
 }
 
 model Application {
@@ -344,6 +378,7 @@ model Application {
   updatedAt   DateTime @updatedAt
 
   @@unique([jobId, applicantId])
+  @@schema("skillmaster")
 }
 
 model SavedJob {
@@ -355,6 +390,7 @@ model SavedJob {
   createdAt DateTime @default(now())
 
   @@unique([jobId, userId])
+  @@schema("skillmaster")
 }
 
 model SavedPost {
@@ -366,6 +402,7 @@ model SavedPost {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Training / Learning ─────────────────────────
@@ -386,16 +423,19 @@ model Course {
   reviews         CourseReview[]
   certificates    Certificate[]
   createdAt       DateTime       @default(now())
+
+  @@schema("skillmaster")
 }
 
 model CourseSkill {
-  id      String @id @default(cuid())
+  id       String @id @default(cuid())
   courseId String
-  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  skillId String
-  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  skillId  String
+  skill    Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, skillId])
+  @@schema("skillmaster")
 }
 
 model Module {
@@ -405,6 +445,8 @@ model Module {
   title    String
   order    Int
   lessons  Lesson[]
+
+  @@schema("skillmaster")
 }
 
 model Lesson {
@@ -417,6 +459,8 @@ model Lesson {
   order           Int
   durationMinutes Int              @default(5)
   progress        LessonProgress[]
+
+  @@schema("skillmaster")
 }
 
 model Enrollment {
@@ -431,6 +475,7 @@ model Enrollment {
   createdAt       DateTime  @default(now())
 
   @@unique([courseId, userId])
+  @@schema("skillmaster")
 }
 
 model LessonProgress {
@@ -443,6 +488,7 @@ model LessonProgress {
   completedAt DateTime?
 
   @@unique([lessonId, userId])
+  @@schema("skillmaster")
 }
 
 model Certificate {
@@ -456,6 +502,7 @@ model Certificate {
   fileUrl    String?
 
   @@unique([userId, courseId])
+  @@schema("skillmaster")
 }
 
 model CourseReview {
@@ -469,6 +516,7 @@ model CourseReview {
   createdAt DateTime @default(now())
 
   @@unique([courseId, userId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Reports ─────────────────────────
@@ -484,6 +532,7 @@ model Report {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+  @@schema("skillmaster")
 }
 
 // ───────────────────────── Auth helpers ─────────────────────────
@@ -496,4 +545,6 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime @default(now())
+
+  @@schema("skillmaster")
 }
