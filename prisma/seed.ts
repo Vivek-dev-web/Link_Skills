@@ -13,6 +13,21 @@ async function upsertSkills(names: string[]) {
 async function main() {
   console.log("Seeding Atlas demo data…");
 
+  // ── Admin account ─────────────────────────────────────────────────
+  const adminPassword = await bcrypt.hash("Admin@123", 10);
+  await prisma.user.upsert({
+    where: { email: "admin@atlas.dev" },
+    update: {},
+    create: {
+      name: "Admin",
+      email: "admin@atlas.dev",
+      password: adminPassword,
+      role: "ADMIN",
+      emailVerified: new Date(),
+      notificationPrefs: { create: {} },
+    },
+  });
+
   const password = await bcrypt.hash("password123", 10);
 
   // ── Skills ────────────────────────────────────────────────────────
@@ -257,7 +272,11 @@ async function main() {
 
   // ── Connections ───────────────────────────────────────────────────
   async function connect(a: string, b: string, status: "ACCEPTED" | "PENDING" = "ACCEPTED") {
-    await prisma.connection.create({ data: { requesterId: a, addresseeId: b, status } });
+    await prisma.connection.upsert({
+      where: { requesterId_addresseeId: { requesterId: a, addresseeId: b } },
+      update: {},
+      create: { requesterId: a, addresseeId: b, status },
+    });
   }
   await connect(users.alex.id, users.maria.id);
   await connect(users.alex.id, users.liam.id);
@@ -273,6 +292,7 @@ async function main() {
       { followerId: users.priya.id, followeeId: users.ava.id },
       { followerId: users.noah.id, followeeId: users.sam.id },
     ],
+    skipDuplicates: true,
   });
 
   // ── Posts, likes, comments ───────────────────────────────────────
@@ -298,6 +318,7 @@ async function main() {
       { postId: post3.id, userId: users.omar.id },
       { postId: post4.id, userId: users.alex.id },
     ],
+    skipDuplicates: true,
   });
   await prisma.comment.createMany({
     data: [
@@ -305,6 +326,7 @@ async function main() {
       { postId: post2.id, userId: users.noah.id, content: "Perfect timing, just got to that part." },
       { postId: post4.id, userId: users.liam.id, content: "Ask them to debug a real (small) bug live instead." },
     ],
+    skipDuplicates: true,
   });
 
   // ── Applications ──────────────────────────────────────────────────
@@ -322,6 +344,7 @@ async function main() {
       { jobId: marketingJob.id, userId: users.omar.id },
       { jobId: frontendJob.id, userId: users.noah.id },
     ],
+    skipDuplicates: true,
   });
 
   // ── Enrollments + completion (-> certificate + skill) ─────────────
@@ -366,6 +389,7 @@ async function main() {
       { courseId: reactCourse.id, userId: users.liam.id, rating: 5, comment: "Exactly the right depth — no wasted time." },
       { courseId: designCourse.id, userId: users.alex.id, rating: 4, comment: "Great refresher on research fundamentals." },
     ],
+    skipDuplicates: true,
   });
 
   console.log("Seed complete.");
