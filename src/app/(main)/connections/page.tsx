@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Search, UserPlus, Check, X, UserMinus, Users } from "lucide-react";
@@ -25,6 +25,30 @@ export default function ConnectionsPage() {
   const [sent, setSent] = useState<any[]>([]);
   const [network, setNetwork] = useState<any[]>([]);
   const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
+
+  const [mutualOpen, setMutualOpen] = useState<string | null>(null);
+  const [mutualUsers, setMutualUsers] = useState<Record<string, any[]>>({});
+  const mutualRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (mutualRef.current && !mutualRef.current.contains(e.target as Node)) {
+        setMutualOpen(null);
+      }
+    }
+    if (mutualOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [mutualOpen]);
+
+  async function toggleMutual(userId: string) {
+    if (mutualOpen === userId) { setMutualOpen(null); return; }
+    if (!mutualUsers[userId]) {
+      const res = await fetch(`/api/connections/mutual?userId=${userId}`);
+      const data = await res.json();
+      setMutualUsers((prev) => ({ ...prev, [userId]: data.users ?? [] }));
+    }
+    setMutualOpen(userId);
+  }
 
   async function loadSuggestions() {
     const res = await fetch("/api/users/suggestions");
@@ -168,7 +192,34 @@ export default function ConnectionsPage() {
                       </Link>
                       <p className="text-xs text-muted truncate">{u.headline ?? "SkillWarehouse member"}</p>
                       {u.mutualConnections > 0 && (
-                        <p className="text-xs text-teal-dark mt-0.5">{u.mutualConnections} mutual connections</p>
+                        <div className="relative inline-block mt-0.5" ref={mutualOpen === u.id ? mutualRef : null}>
+                          <button
+                            onClick={() => toggleMutual(u.id)}
+                            className="text-xs text-teal hover:underline cursor-pointer text-left"
+                          >
+                            {u.mutualConnections} mutual connection{u.mutualConnections !== 1 ? "s" : ""}
+                          </button>
+                          {mutualOpen === u.id && (
+                            <div className="absolute left-0 top-5 z-30 bg-canvas border border-border rounded-xl shadow-lg p-3 w-52">
+                              <p className="text-xs font-semibold text-muted mb-2">Mutual connections</p>
+                              {(mutualUsers[u.id] ?? []).length === 0 ? (
+                                <p className="text-xs text-muted">None found</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {(mutualUsers[u.id] ?? []).map((m) => (
+                                    <Link key={m.id} href={`/profile/${m.id}`} className="flex items-center gap-2 hover:opacity-80" onClick={() => setMutualOpen(null)}>
+                                      <Avatar name={m.name} src={m.image} size="sm" />
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-medium text-ink truncate">{m.name}</p>
+                                        {m.headline && <p className="text-[10px] text-muted truncate">{m.headline}</p>}
+                                      </div>
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                     <button
