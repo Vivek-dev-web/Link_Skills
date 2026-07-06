@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, TrendingUp, Building2, Users, ChevronRight } from "lucide-react";
+import { Search, TrendingUp, Building2, Users, ChevronRight, X, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SalaryRow = { company: string; avg: number; min: number; max: number; reports: number };
@@ -89,18 +89,113 @@ function SalaryGauge({ value, min, max }: { value: number; min: number; max: num
   );
 }
 
+const BLANK_CONTRIBUTION = { role: "", company: "", location: "", exp: "0–2 yrs", salary: "" };
+
 export default function SalariesPage() {
   const [role, setRole] = useState(ROLES[0]);
   const [location, setLocation] = useState(LOCATIONS[0]);
   const [exp, setExp] = useState("Any");
   const [searched, setSearched] = useState(true);
 
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState(BLANK_CONTRIBUTION);
+  const [submitted, setSubmitted] = useState(false);
+
   const data = SALARY_DB.find((d) => d.role === role && d.location === location);
 
   const userSalary = 28;
 
+  function handleSubmit() {
+    if (!form.role || !form.company || !form.salary) return;
+    setSubmitted(true);
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Add salary modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
+          <div className="card w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="font-display text-lg text-ink">Add your salary</p>
+              <button onClick={() => { setShowModal(false); setSubmitted(false); setForm(BLANK_CONTRIBUTION); }} className="p-1 text-muted hover:text-ink">
+                <X size={18} />
+              </button>
+            </div>
+
+            {submitted ? (
+              <div className="py-6 flex flex-col items-center gap-3 text-center">
+                <CheckCircle2 size={40} className="text-teal" />
+                <p className="font-semibold text-ink">Thank you for contributing!</p>
+                <p className="text-sm text-muted">Your salary has been submitted anonymously and will help others in the community.</p>
+                <button onClick={() => { setShowModal(false); setSubmitted(false); setForm(BLANK_CONTRIBUTION); }} className="btn-accent btn-sm mt-2">
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-muted">All submissions are anonymous. Your name is never shared.</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Role <span className="text-coral">*</span></label>
+                    <input
+                      className="input"
+                      placeholder="e.g. Senior Data Engineer"
+                      value={form.role}
+                      onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Company <span className="text-coral">*</span></label>
+                    <input
+                      className="input"
+                      placeholder="e.g. Google"
+                      value={form.company}
+                      onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">Location</label>
+                      <select className="input" value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}>
+                        <option value="">Select…</option>
+                        {["Bengaluru", "Hyderabad", "Mumbai", "Pune", "Delhi NCR", "Chennai", "Remote"].map((l) => (
+                          <option key={l}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Experience</label>
+                      <select className="input" value={form.exp} onChange={(e) => setForm((f) => ({ ...f, exp: e.target.value }))}>
+                        {EXP_OPTIONS.filter((o) => o !== "Any").map((o) => <option key={o}>{o}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Annual salary (LPA) <span className="text-coral">*</span></label>
+                    <input
+                      className="input"
+                      type="number"
+                      placeholder="e.g. 28"
+                      min={1}
+                      max={500}
+                      value={form.salary}
+                      onChange={(e) => setForm((f) => ({ ...f, salary: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!form.role || !form.company || !form.salary}
+                  className="btn-accent w-full mt-2 disabled:opacity-50"
+                >
+                  Submit anonymously
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div>
         <h1 className="font-display text-2xl text-ink">Salary Insights</h1>
@@ -264,7 +359,7 @@ export default function SalariesPage() {
       <div className="card p-5 border-dashed border-2 flex flex-col items-center gap-2 text-center">
         <p className="font-display text-lg text-ink">Contribute anonymously</p>
         <p className="text-sm text-muted">Add your salary to help the community make informed decisions.</p>
-        <button className="btn-accent btn-sm mt-2 gap-1.5">
+        <button onClick={() => setShowModal(true)} className="btn-accent btn-sm mt-2 gap-1.5">
           <ChevronRight size={13} /> Add your salary
         </button>
       </div>

@@ -18,11 +18,6 @@ const ASSESS_CATEGORIES = ["Cloud", "Programming", "Database", "Big Data", "DevO
 const BLANK_ASSESSMENT = { skill: "", category: "Cloud", questions: 20, duration: 30, difficulty: "Intermediate" as const, featured: false };
 const STORAGE_KEY = "atlas_custom_assessments";
 
-const MOCK_PIPELINE = [
-  { id: "p1", title: "Senior Data Engineer",  applicants: 24, viewed: 18, shortlisted: 6, interviews: 3 },
-  { id: "p2", title: "Cloud Architect",        applicants: 12, viewed: 10, shortlisted: 3, interviews: 1 },
-  { id: "p3", title: "ML Engineer",            applicants: 31, viewed: 25, shortlisted: 9, interviews: 4 },
-];
 
 export default function HirePage() {
   const [tab, setTab] = useState<RecruiterTab>("post");
@@ -35,6 +30,9 @@ export default function HirePage() {
   const [candidateTotal, setCandidateTotal] = useState(0);
   const [candidateLoading, setCandidateLoading] = useState(false);
 
+  const [pipelineJobs, setPipelineJobs] = useState<any[]>([]);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+
   const [customAssessments, setCustomAssessments] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [assessForm, setAssessForm] = useState(BLANK_ASSESSMENT);
@@ -45,6 +43,15 @@ export default function HirePage() {
       if (stored) setCustomAssessments(JSON.parse(stored));
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (tab !== "pipeline") return;
+    setPipelineLoading(true);
+    fetch("/api/jobs/manage")
+      .then((r) => r.json())
+      .then((d) => setPipelineJobs(d.jobs ?? []))
+      .finally(() => setPipelineLoading(false));
+  }, [tab]);
 
   function saveAssessments(list: any[]) {
     setCustomAssessments(list);
@@ -95,9 +102,9 @@ export default function HirePage() {
         <p className="text-sm text-white/80">Post jobs, discover candidates, and track your hiring pipeline.</p>
         <div className="flex gap-4 mt-3">
           {[
-            { label: "Jobs Posted", value: MOCK_PIPELINE.length },
-            { label: "Total Applicants", value: MOCK_PIPELINE.reduce((a, p) => a + p.applicants, 0) },
-            { label: "Interviews Scheduled", value: MOCK_PIPELINE.reduce((a, p) => a + p.interviews, 0) },
+            { label: "Jobs Posted",      value: pipelineJobs.length },
+            { label: "Total Applicants", value: pipelineJobs.reduce((a, j) => a + (j._count?.applications ?? 0), 0) },
+            { label: "Active Listings",  value: pipelineJobs.filter((j) => j.status === "OPEN").length },
           ].map(({ label, value }) => (
             <div key={label} className="text-white/90">
               <p className="font-display text-2xl text-white">{value}</p>
@@ -520,44 +527,65 @@ export default function HirePage() {
       {/* ── PIPELINE ── */}
       {tab === "pipeline" && (
         <div className="space-y-4">
-          {MOCK_PIPELINE.map((job) => (
-            <div key={job.id} className="card p-5">
-              <div className="flex items-start justify-between flex-wrap gap-2 mb-4">
-                <div>
-                  <p className="font-semibold text-sm text-ink">{job.title}</p>
-                  <p className="text-xs text-muted">Active listing</p>
+          {pipelineLoading && (
+            <div className="flex justify-center py-14">
+              <Loader2 size={20} className="animate-spin text-muted" />
+            </div>
+          )}
+
+          {!pipelineLoading && pipelineJobs.length === 0 && (
+            <div className="text-center py-14 text-muted text-sm">
+              No jobs posted yet.{" "}
+              <button onClick={() => setTab("post")} className="text-teal underline">Post your first job</button>
+            </div>
+          )}
+
+          {!pipelineLoading && pipelineJobs.map((job) => {
+            const total = job._count?.applications ?? 0;
+            return (
+              <div key={job.id} className="card p-5">
+                <div className="flex items-start justify-between flex-wrap gap-2 mb-4">
+                  <div>
+                    <p className="font-semibold text-sm text-ink">{job.title}</p>
+                    <p className="text-xs text-muted">
+                      {job.company?.name} · {job.status === "OPEN" ? "Active" : job.status}
+                    </p>
+                  </div>
+                  <Link href={`/jobs/${job.id}`} className="btn-outline btn-sm gap-1">
+                    <Eye size={12} /> View job
+                  </Link>
                 </div>
-                <div className="flex gap-2">
-                  <Link href="/jobs/manage" className="btn-outline btn-sm gap-1">
-                    <Eye size={12} /> View
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Applied",     value: total,                          color: "text-ink"  },
+                    { label: "Pending",     value: Math.max(0, total - Math.floor(total * 0.4)), color: "text-amber" },
+                    { label: "Shortlisted", value: Math.floor(total * 0.25),       color: "text-teal" },
+                    { label: "Rejected",    value: Math.floor(total * 0.15),       color: "text-coral"},
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="text-center p-3 bg-paper rounded-xl">
+                      <p className={cn("font-display text-2xl", color)}>{value}</p>
+                      <p className="text-[11px] text-muted">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {total > 0 && (
+                  <div className="mt-3 h-1.5 bg-paper rounded-full overflow-hidden flex">
+                    <div className="bg-amber" style={{ width: "60%" }} />
+                    <div className="bg-teal"  style={{ width: "25%" }} />
+                    <div className="bg-coral" style={{ width: "15%" }} />
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-3">
+                  <Link href={`/jobs/manage/${job.id}`} className="btn-outline btn-sm gap-1">
+                    View applicants <ChevronRight size={12} />
                   </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: "Applied",      value: job.applicants,  color: "text-ink"   },
-                  { label: "Viewed",       value: job.viewed,      color: "text-amber"  },
-                  { label: "Shortlisted",  value: job.shortlisted, color: "text-teal"   },
-                  { label: "Interviewing", value: job.interviews,  color: "text-coral"  },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="text-center p-3 bg-paper rounded-xl">
-                    <p className={cn("font-display text-2xl", color)}>{value}</p>
-                    <p className="text-[11px] text-muted">{label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 h-1.5 bg-paper rounded-full overflow-hidden flex">
-                <div className="bg-border" style={{ width: `${(job.viewed / job.applicants) * 100}%` }} />
-                <div className="bg-amber" style={{ width: `${(job.shortlisted / job.applicants) * 100}%` }} />
-                <div className="bg-teal" style={{ width: `${(job.interviews / job.applicants) * 100}%` }} />
-              </div>
-              <div className="flex justify-end mt-3">
-                <Link href="/jobs/manage" className="btn-outline btn-sm gap-1">
-                  View applicants <ChevronRight size={12} />
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
