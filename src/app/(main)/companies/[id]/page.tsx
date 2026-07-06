@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Loader2, Globe, Users2, Briefcase, Star, MapPin,
   TrendingUp, ThumbsUp, ThumbsDown, DollarSign, MessageSquare,
-  CheckCircle2, Building2, Zap,
+  CheckCircle2, Building2, Zap, Plus, X, Trash2,
 } from "lucide-react";
 import JobCard from "@/components/JobCard";
 import Avatar from "@/components/Avatar";
@@ -70,10 +70,15 @@ function RatingBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+const BLANK_INTERVIEW = { role: "", difficulty: "Medium", outcome: "Offer", steps: [""] };
+
 export default function CompanyPage() {
   const { id } = useParams<{ id: string }>();
   const [company, setCompany] = useState<any>(null);
   const [tab, setTab] = useState<Tab>("overview");
+  const [interviews, setInterviews] = useState(MOCK_INTERVIEWS as any[]);
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [form, setForm] = useState({ ...BLANK_INTERVIEW, steps: [""] });
 
   useEffect(() => {
     fetch(`/api/companies/${id}`)
@@ -327,21 +332,21 @@ export default function CompanyPage() {
       {/* ── INTERVIEWS ── */}
       {tab === "interviews" && (
         <div className="space-y-4">
-          {MOCK_INTERVIEWS.map((iv) => (
-            <div key={iv.id} className="card p-5 space-y-3">
+          {interviews.map((iv, idx) => (
+            <div key={idx} className="card p-5 space-y-3">
               <div className="flex items-start justify-between flex-wrap gap-2">
                 <p className="font-medium text-sm text-ink">{iv.role}</p>
                 <div className="flex gap-2">
-                  <span className={cn("chip !py-0.5 !px-2 !text-[11px]", difficultyColor[iv.difficulty])}>
+                  <span className={cn("chip !py-0.5 !px-2 !text-[11px]", difficultyColor[iv.difficulty] ?? "chip")}>
                     {iv.difficulty}
                   </span>
-                  <span className={cn("chip !py-0.5 !px-2 !text-[11px]", outcomeColor[iv.outcome])}>
+                  <span className={cn("chip !py-0.5 !px-2 !text-[11px]", outcomeColor[iv.outcome] ?? "chip")}>
                     {iv.outcome}
                   </span>
                 </div>
               </div>
               <div className="route-line space-y-2">
-                {iv.steps.map((step, i) => (
+                {iv.steps.filter(Boolean).map((step: string, i: number) => (
                   <div key={i} className="relative">
                     <span className={i === iv.steps.length - 1 && iv.outcome === "Offer" ? "route-node-done" : "route-node"} />
                     <p className="text-xs text-ink">{step}</p>
@@ -353,7 +358,100 @@ export default function CompanyPage() {
           <div className="card p-5 border-dashed border-2 flex flex-col items-center gap-2 text-center">
             <MessageSquare size={24} className="text-muted" />
             <p className="text-sm font-medium text-ink">Share your interview experience</p>
-            <button className="btn-accent btn-sm mt-1">Add experience</button>
+            <button className="btn-accent btn-sm mt-1" onClick={() => { setForm({ ...BLANK_INTERVIEW, steps: [""] }); setShowInterviewModal(true); }}>
+              Add experience
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── INTERVIEW MODAL ── */}
+      {showInterviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="font-display text-lg text-ink">Share interview experience</h2>
+              <button onClick={() => setShowInterviewModal(false)} className="p-1.5 rounded-lg hover:bg-paper text-muted">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Role */}
+              <div>
+                <label className="label">Role applied for</label>
+                <input className="input" placeholder="e.g. Senior Data Engineer"
+                  value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))} />
+              </div>
+
+              {/* Difficulty */}
+              <div>
+                <label className="label">Difficulty</label>
+                <div className="flex gap-2">
+                  {["Easy", "Medium", "Hard"].map((d) => (
+                    <button key={d} onClick={() => setForm((f) => ({ ...f, difficulty: d }))}
+                      className={cn("chip flex-1 justify-center transition-colors",
+                        form.difficulty === d ? difficultyColor[d] : "hover:bg-paper")}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Outcome */}
+              <div>
+                <label className="label">Outcome</label>
+                <div className="flex gap-2">
+                  {["Offer", "Rejected", "No response"].map((o) => (
+                    <button key={o} onClick={() => setForm((f) => ({ ...f, outcome: o }))}
+                      className={cn("chip flex-1 justify-center text-[11px] transition-colors",
+                        form.outcome === o ? outcomeColor[o] : "hover:bg-paper")}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Steps */}
+              <div>
+                <label className="label">Interview steps</label>
+                <div className="space-y-2">
+                  {form.steps.map((step, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <input className="input flex-1 !py-1.5 !text-sm" placeholder={`Step ${i + 1}`}
+                        value={step}
+                        onChange={(e) => {
+                          const steps = [...form.steps];
+                          steps[i] = e.target.value;
+                          setForm((f) => ({ ...f, steps }));
+                        }} />
+                      {form.steps.length > 1 && (
+                        <button onClick={() => setForm((f) => ({ ...f, steps: f.steps.filter((_, j) => j !== i) }))}
+                          className="p-1.5 text-muted hover:text-coral transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button onClick={() => setForm((f) => ({ ...f, steps: [...f.steps, ""] }))}
+                    className="btn-ghost btn-sm flex items-center gap-1 text-teal">
+                    <Plus size={13} /> Add step
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 p-5 border-t border-border">
+              <button onClick={() => setShowInterviewModal(false)} className="btn-outline flex-1">Cancel</button>
+              <button
+                disabled={!form.role.trim() || form.steps.every((s) => !s.trim())}
+                onClick={() => {
+                  setInterviews((prev) => [...prev, { ...form, steps: form.steps.filter(Boolean), id: Date.now() }]);
+                  setShowInterviewModal(false);
+                }}
+                className="btn-accent flex-1">
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       )}
