@@ -66,6 +66,8 @@ export const jobSchema = z.object({
   salaryMin: z.number().int().nonnegative().optional().nullable(),
   salaryMax: z.number().int().nonnegative().optional().nullable(),
   remote: z.boolean().optional().default(false),
+  featured: z.boolean().optional().default(false),
+  promoted: z.boolean().optional().default(false),
   status: z.enum(["OPEN", "CLOSED", "DRAFT"]).optional().default("OPEN"),
   skills: z.array(z.string()).optional().default([]),
 });

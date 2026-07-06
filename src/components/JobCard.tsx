@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Briefcase, Heart } from "lucide-react";
+import { MapPin, Briefcase, Heart, Star, Zap } from "lucide-react";
 import { formatSalary, formatRelativeTime } from "@/lib/utils";
 import { WORK_TYPE_LABELS, EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,20 @@ export default function JobCard({
   onToggleSave?: (id: string) => void;
 }) {
   return (
-    <div className="card p-4">
-      <div className="flex items-start justify-between">
+    <div className="card p-4 relative">
+      {/* Real featured / promoted badges */}
+      {job.featured && (
+        <span className="absolute top-3 left-3 z-10 chip-amber !py-0.5 !px-2 !text-[10px] flex items-center gap-1">
+          <Star size={9} /> Featured
+        </span>
+      )}
+      {job.promoted && !job.featured && (
+        <span className="absolute top-3 left-3 z-10 chip-coral !py-0.5 !px-2 !text-[10px] flex items-center gap-1">
+          <Zap size={9} /> Promoted
+        </span>
+      )}
+
+      <div className={cn("flex items-start justify-between", (job.featured || job.promoted) && "mt-6")}>
         <Link href={`/jobs/${job.id}`} className="flex items-start gap-3 flex-1 min-w-0">
           <div className="h-11 w-11 rounded-lg bg-paper border border-border flex items-center justify-center shrink-0 overflow-hidden">
             {job.company?.logoUrl ? (

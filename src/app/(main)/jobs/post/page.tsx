@@ -25,6 +25,8 @@ export default function PostJobPage() {
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
   const [remote, setRemote] = useState(false);
+  const [featured, setFeatured] = useState(false);
+  const [promoted, setPromoted] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -79,6 +81,8 @@ export default function PostJobPage() {
         salaryMin: salaryMin ? Number(salaryMin) : undefined,
         salaryMax: salaryMax ? Number(salaryMax) : undefined,
         remote,
+        featured,
+        promoted,
         skills,
       }),
     });
@@ -170,8 +174,21 @@ export default function PostJobPage() {
           </div>
         </div>
         <label className="flex items-center gap-2 text-sm text-ink">
-          <input type="checkbox" checked={remote} onChange={(e) => setRemote(e.target.checked)} /> Remote-friendly
+          <input type="checkbox" checked={remote} onChange={(e) => setRemote(e.target.checked)} className="accent-teal" /> Remote-friendly
         </label>
+        <div className="border border-border rounded-xl p-3 space-y-2 bg-paper">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wide">Visibility boosts</p>
+          <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="accent-amber" />
+            <span className="chip-amber !py-0.5 !px-2 !text-[10px]">⭐ Featured</span>
+            <span className="text-xs text-muted">— pinned to top with a gold badge</span>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+            <input type="checkbox" checked={promoted} onChange={(e) => setPromoted(e.target.checked)} className="accent-coral" />
+            <span className="chip-coral !py-0.5 !px-2 !text-[10px]">⚡ Promoted</span>
+            <span className="text-xs text-muted">— boosted above organic results</span>
+          </label>
+        </div>
         <div>
           <label className="label">Skills required</label>
           <SkillTagInput skills={skills} onAdd={(s) => setSkills((arr) => [...arr, s])} onRemove={(s) => setSkills((arr) => arr.filter((x) => x !== s))} />

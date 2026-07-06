@@ -308,6 +308,8 @@ model Job {
   salaryMin       Int?
   salaryMax       Int?
   remote          Boolean       @default(false)
+  featured        Boolean       @default(false)
+  promoted        Boolean       @default(false)
   status          String        @default("OPEN")       // OPEN | CLOSED | DRAFT
   skills          JobSkill[]
   applications    Application[]

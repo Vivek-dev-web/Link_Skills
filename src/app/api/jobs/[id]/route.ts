@@ -77,6 +77,27 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   return NextResponse.json(updated);
 }
 
+// PATCH — lightweight field toggle (featured, promoted, status)
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const session = await getCurrentSession();
+  if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+
+  const job = await prisma.job.findUnique({ where: { id: params.id } });
+  if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const member = await prisma.companyMember.findUnique({
+    where: { companyId_userId: { companyId: job.companyId, userId: session.user.id } },
+  });
+  if (!member) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+
+  const body = await req.json();
+  const allowed = ["featured", "promoted", "status"];
+  const data = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
+
+  const updated = await prisma.job.update({ where: { id: params.id }, data });
+  return NextResponse.json(updated);
+}
+
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const session = await getCurrentSession();
   if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });

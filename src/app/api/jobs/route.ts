@@ -43,7 +43,9 @@ export async function GET(req: Request) {
         skills: { include: { skill: true } },
         _count: { select: { applications: true } },
       },
-      orderBy: sort === "salary" ? { salaryMax: "desc" } : { createdAt: "desc" },
+      orderBy: sort === "salary_desc"
+        ? [{ featured: "desc" }, { promoted: "desc" }, { salaryMax: "desc" }]
+        : [{ featured: "desc" }, { promoted: "desc" }, { createdAt: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
