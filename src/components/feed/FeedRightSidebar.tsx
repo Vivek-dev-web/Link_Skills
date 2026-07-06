@@ -5,13 +5,6 @@ import Link from "next/link";
 import { TrendingUp, UserPlus, Briefcase, BookOpen, Hash } from "lucide-react";
 import Avatar from "@/components/Avatar";
 
-const TRENDING = [
-  { tag: "AzureOpenAI", posts: "2.4k posts" },
-  { tag: "Databricks", posts: "1.8k posts" },
-  { tag: "KubernetesDay", posts: "1.2k posts" },
-  { tag: "CloudSecurity", posts: "980 posts" },
-  { tag: "AWSreinvent", posts: "756 posts" },
-];
 
 const PROMOTED_COURSE = {
   title: "Azure Solutions Architect Expert (AZ-305)",
@@ -22,6 +15,7 @@ const PROMOTED_COURSE = {
 export default function FeedRightSidebar() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
+  const [trending, setTrending] = useState<{ tag: string; posts: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/users/suggestions")
@@ -30,6 +24,9 @@ export default function FeedRightSidebar() {
     fetch("/api/jobs/recommended")
       .then((r) => r.json())
       .then((d) => setJobs((d.jobs ?? []).slice(0, 3)));
+    fetch("/api/trending")
+      .then((r) => r.json())
+      .then((d) => setTrending(d.trending ?? []));
   }, []);
 
   async function connectWith(userId: string) {
@@ -81,7 +78,7 @@ export default function FeedRightSidebar() {
           <h3 className="font-semibold text-sm text-ink">Trending in Cloud &amp; Data</h3>
         </div>
         <div className="space-y-2.5">
-          {TRENDING.map((t, i) => (
+          {trending.map((t, i) => (
             <div key={t.tag} className="flex items-center justify-between group cursor-pointer">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted w-4">{i + 1}</span>
