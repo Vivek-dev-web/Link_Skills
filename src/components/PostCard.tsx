@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2,
-  CornerDownRight, SendHorizonal, MoreHorizontal, Bookmark, Link2,
+  CornerDownRight, SendHorizonal, Settings, Bookmark, Link2,
   Code2, UserMinus, BellOff, Flag, BookmarkCheck,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -242,7 +242,7 @@ export default function PostCard({ post, onDeleted }: { post: PostData; onDelete
             className="p-1.5 rounded-full text-muted hover:text-ink hover:bg-paper transition-colors"
             aria-label="Post options"
           >
-            <MoreHorizontal size={18} />
+            <Settings size={15} />
           </button>
 
           {menuOpen && (

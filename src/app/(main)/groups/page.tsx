@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users2, Search, Plus, Lock, Globe, X, MoreHorizontal, Link2, Settings, LogOut } from "lucide-react";
+import { Users2, Search, Plus, Lock, Globe, X, Link2, Settings, LogOut } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/Toast";
@@ -254,7 +254,7 @@ function GroupRow({ group, joined, onLeave }: { group: Group; joined: boolean; o
           className="p-1.5 rounded-full text-muted hover:text-ink hover:bg-paper transition-colors"
           aria-label="Group options"
         >
-          <MoreHorizontal size={18} />
+          <Settings size={15} />
         </button>
         {menuOpen && (
           <div className="absolute right-0 top-9 z-50 w-52 card shadow-pop py-1">
