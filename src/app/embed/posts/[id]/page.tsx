@@ -13,54 +13,49 @@ export default async function EmbedPostPage({ params }: { params: { id: string }
 
   if (!post) notFound();
 
+  const origin = process.env.NEXTAUTH_URL ?? "";
+
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{post.author.name} on Atlas</title>
-        <style>{`
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: Inter, system-ui, sans-serif; background: #fff; color: #1B1F3B; }
-          .card { border: 1px solid #E4E7EC; border-radius: 12px; padding: 16px; margin: 12px; }
-          .avatar { width: 40px; height: 40px; border-radius: 50%; background: #D0F7F2; color: #00C4A7; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-          .avatar img { width: 100%; height: 100%; object-fit: cover; }
-          .header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
-          .name { font-weight: 600; font-size: 14px; }
-          .headline { font-size: 11px; color: #64748B; margin-top: 1px; }
-          .time { font-size: 11px; color: #64748B; }
-          .content { font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
-          .image { margin-top: 10px; border-radius: 8px; width: 100%; max-height: 220px; object-fit: cover; display: block; }
-          .footer { display: flex; gap: 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #E4E7EC; font-size: 12px; color: #64748B; }
-          .badge { display: inline-block; background: #00C4A7; color: #fff; border-radius: 99px; padding: 2px 8px; font-size: 10px; font-weight: 600; text-decoration: none; margin-top: 12px; }
-          a { color: #00C4A7; text-decoration: none; }
-        `}</style>
-      </head>
-      <body>
-        <div className="card">
-          <div className="header">
-            <div className="avatar">
-              {post.author.image
-                ? <img src={post.author.image} alt="" />
-                : post.author.name.charAt(0)}
-            </div>
-            <div>
-              <p className="name">{post.author.name}</p>
-              {post.author.headline && <p className="headline">{post.author.headline}</p>}
-              <p className="time">{formatRelativeTime(post.createdAt.toISOString())}</p>
-            </div>
+    <div className="p-3 font-sans">
+      <div className="border border-border rounded-xl p-4 bg-white space-y-3 max-w-lg">
+        {/* Author */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-full bg-teal-light flex items-center justify-center text-sm font-bold text-teal shrink-0 overflow-hidden">
+            {post.author.image
+              ? <img src={post.author.image} alt="" className="h-full w-full object-cover" />
+              : post.author.name.charAt(0)}
           </div>
-          <p className="content">{post.content}</p>
-          {post.imageUrl && <img src={post.imageUrl} alt="" className="image" />}
-          <div className="footer">
-            <span>👍 {post._count.likes} reactions</span>
-            <span>💬 {post._count.comments} comments</span>
+          <div>
+            <p className="text-sm font-semibold text-ink">{post.author.name}</p>
+            {post.author.headline && <p className="text-xs text-muted">{post.author.headline}</p>}
+            <p className="text-xs text-muted">{formatRelativeTime(post.createdAt.toISOString())}</p>
           </div>
-          <a href={`${process.env.NEXTAUTH_URL ?? ""}/posts/${post.id}`} className="badge" target="_blank" rel="noopener">
-            View on Atlas
-          </a>
         </div>
-      </body>
-    </html>
+
+        {/* Content */}
+        <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap line-clamp-6">{post.content}</p>
+
+        {/* Image */}
+        {post.imageUrl && (
+          <img src={post.imageUrl} alt="" className="rounded-lg w-full max-h-52 object-cover" />
+        )}
+
+        {/* Counts */}
+        <div className="flex gap-4 text-xs text-muted pt-1 border-t border-border">
+          <span>👍 {post._count.likes} reactions</span>
+          <span>💬 {post._count.comments} comments</span>
+        </div>
+
+        {/* CTA */}
+        <a
+          href={`${origin}/posts/${post.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal rounded-full px-3 py-1.5 hover:bg-teal-dark transition-colors"
+        >
+          View on Atlas →
+        </a>
+      </div>
+    </div>
   );
 }

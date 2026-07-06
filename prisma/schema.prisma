@@ -61,6 +61,7 @@ model User {
   applications       Application[]
   savedJobs          SavedJob[]
   savedPosts         SavedPost[]
+  reports            Report[]
 
   createdCourses Course[]       @relation("CourseCreator")
   enrollments    Enrollment[]
@@ -170,7 +171,9 @@ model Post {
   likes       Like[]
   comments    Comment[]
   savedBy     SavedPost[]
+  reports     Report[]
 }
+
 
 model Like {
   id        String   @id @default(cuid())
@@ -466,6 +469,21 @@ model CourseReview {
   createdAt DateTime @default(now())
 
   @@unique([courseId, userId])
+}
+
+// ───────────────────────── Reports ─────────────────────────
+
+model Report {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason    String   @default("spam")
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
 }
 
 // ───────────────────────── Auth helpers ─────────────────────────

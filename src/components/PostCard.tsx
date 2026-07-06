@@ -226,9 +226,14 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
     setMenuOpen(false);
   }
 
-  function handleReport() {
-    show("Post reported. Thanks for the feedback.", "info");
+  async function handleReport() {
     setMenuOpen(false);
+    await fetch(`/api/posts/${post.id}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: "spam" }),
+    });
+    show("Post reported. Our team will review it.", "info");
   }
 
   const isOwner = (session?.user as any)?.id === post.author.id;
