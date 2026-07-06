@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  try {
   const session = await getCurrentSession();
   if (!session?.user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
 
@@ -138,7 +139,32 @@ export async function GET() {
           { name: "Pune", pct: 12 },
           { name: "Other", pct: 8 },
         ],
+        industries: [
+          { name: "Information Technology", pct: 42 },
+          { name: "Financial Services", pct: 20 },
+          { name: "E-commerce", pct: 15 },
+          { name: "Healthcare", pct: 13 },
+          { name: "Other", pct: 10 },
+        ],
+        companySizes: [
+          { name: "1–10 employees", pct: 18 },
+          { name: "11–50 employees", pct: 24 },
+          { name: "51–200 employees", pct: 28 },
+          { name: "201–1000 employees", pct: 20 },
+          { name: "1000+ employees", pct: 10 },
+        ],
+        jobTitles: [
+          { name: "Software Engineer", pct: 30 },
+          { name: "Product Manager", pct: 22 },
+          { name: "Data Analyst", pct: 18 },
+          { name: "Designer", pct: 16 },
+          { name: "Other", pct: 14 },
+        ],
       },
     },
   });
+  } catch (err) {
+    console.error("GET /api/analytics error:", err);
+    return NextResponse.json({ error: "Failed to load analytics" }, { status: 500 });
+  }
 }

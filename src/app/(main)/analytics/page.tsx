@@ -605,23 +605,25 @@ export default function AnalyticsPage() {
 
                 {/* Bars */}
                 <div className="space-y-3 mt-2">
-                  {demoTab === "All" || demoTab === "Company" ? (
-                    aa.demographics?.companies?.map((d: any) => (
-                      <DemoBar key={d.name} label={d.name} pct={d.pct} color="bg-teal" />
-                    ))
-                  ) : demoTab === "Seniority" ? (
-                    aa.demographics?.seniority?.map((d: any) => (
-                      <DemoBar key={d.name} label={d.name} pct={d.pct} color="bg-coral" />
-                    ))
-                  ) : demoTab === "Location" ? (
-                    aa.demographics?.locations?.map((d: any) => (
-                      <DemoBar key={d.name} label={d.name} pct={d.pct} color="bg-teal" />
-                    ))
-                  ) : (
-                    aa.demographics?.companies?.map((d: any) => (
-                      <DemoBar key={d.name} label={d.name} pct={d.pct} color="bg-teal" />
-                    ))
-                  )}
+                  {(() => {
+                    const d = aa.demographics ?? {};
+                    const items =
+                      demoTab === "Seniority"    ? d.seniority   :
+                      demoTab === "Location"     ? d.locations   :
+                      demoTab === "Industry"     ? d.industries  :
+                      demoTab === "Company size" ? d.companySizes :
+                      demoTab === "Job title"    ? d.jobTitles   :
+                      d.companies; // "All" and "Company"
+                    const color =
+                      demoTab === "Seniority"    ? "bg-coral"     :
+                      demoTab === "Industry"     ? "bg-amber-dark" :
+                      demoTab === "Company size" ? "bg-teal"      :
+                      demoTab === "Job title"    ? "bg-coral"     :
+                      "bg-teal";
+                    return items?.map((item: any) => (
+                      <DemoBar key={item.name} label={item.name} pct={item.pct} color={color} />
+                    ));
+                  })()}
                 </div>
               </div>
             </div>
