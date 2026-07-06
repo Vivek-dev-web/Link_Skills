@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ThumbsUp, Smile, Lightbulb, MessageCircle, Repeat2, FileText, Trash2,
   CornerDownRight, SendHorizonal, Settings, Bookmark, Link2,
-  Code2, UserMinus, BellOff, Flag, BookmarkCheck,
+  Code2, UserMinus, BellOff, Flag, BookmarkCheck, Copy, Check, X,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Avatar from "@/components/Avatar";
@@ -118,6 +118,8 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
   const [saved, setSaved] = useState(savedByMe ?? false);
   const [unfollowed, setUnfollowed] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -194,9 +196,22 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
   }
 
   function handleEmbed() {
-    const code = `<iframe src="${window.location.origin}/embed/posts/${post.id}" width="500" height="300" frameborder="0"></iframe>`;
-    navigator.clipboard.writeText(code).then(() => show("Embed code copied to clipboard", "success"));
     setMenuOpen(false);
+    setEmbedOpen(true);
+    setEmbedCopied(false);
+  }
+
+  function copyEmbedCode() {
+    const code = embedCode();
+    navigator.clipboard.writeText(code).then(() => {
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
+    });
+  }
+
+  function embedCode() {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `<iframe src="${origin}/embed/posts/${post.id}" height="400" width="504" frameborder="0" allowfullscreen title="Embedded post"></iframe>`;
   }
 
   function handleUnfollow() {
@@ -221,6 +236,73 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
   if (hidden) return null;
 
   return (
+    <>
+    {/* Embed modal */}
+    {embedOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm p-4" onClick={() => setEmbedOpen(false)}>
+        <div className="card w-full max-w-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Code2 size={18} className="text-teal" />
+              <h2 className="font-display text-lg text-ink">Embed this post</h2>
+            </div>
+            <button onClick={() => setEmbedOpen(false)} className="text-muted hover:text-ink p-1 transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Post preview inside modal */}
+          <div className="border border-border rounded-xl p-4 bg-paper space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-teal-light flex items-center justify-center text-xs font-bold text-teal shrink-0">
+                {post.author.name.charAt(0)}
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-ink">{post.author.name}</p>
+                {post.author.headline && <p className="text-[11px] text-muted">{post.author.headline}</p>}
+              </div>
+            </div>
+            <p className="text-xs text-ink line-clamp-3">{post.content}</p>
+            {post.imageUrl && <img src={post.imageUrl} alt="" className="rounded-lg w-full h-28 object-cover" />}
+          </div>
+
+          {/* Embed code box */}
+          <div>
+            <p className="label mb-1.5">Embed code</p>
+            <div className="relative">
+              <textarea
+                readOnly
+                rows={3}
+                className="textarea font-mono text-xs resize-none pr-12 bg-paper"
+                value={embedCode()}
+              />
+              <button
+                onClick={copyEmbedCode}
+                className={cn(
+                  "absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-colors",
+                  embedCopied ? "text-teal bg-teal-light" : "text-muted hover:text-teal hover:bg-teal-light"
+                )}
+                title="Copy code"
+              >
+                {embedCopied ? <Check size={15} /> : <Copy size={15} />}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted mt-1.5">Paste this code into any webpage to embed the post.</p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button onClick={copyEmbedCode} className={cn("btn-accent flex-1 flex items-center justify-center gap-2", embedCopied && "bg-teal-dark")}>
+              {embedCopied ? <Check size={14} /> : <Copy size={14} />}
+              {embedCopied ? "Copied!" : "Copy code"}
+            </button>
+            <button onClick={() => setEmbedOpen(false)} className="btn-outline btn-sm px-4">Done</button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="card p-4 hover:shadow-hover transition-shadow duration-200">
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -380,6 +462,7 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
         </div>
       )}
     </div>
+    </>
   );
 }
 
