@@ -54,17 +54,53 @@ function ScoreGauge({ score }: { score: number }) {
   );
 }
 
+type UploadState = "idle" | "uploading" | "success" | "error";
+
 export default function ResumePage() {
   const [tab, setTab] = useState<"dashboard" | "builder">("dashboard");
   const [template, setTemplate] = useState("Modern");
   const [activeSection, setActiveSection] = useState("info");
   const [recruiterVisible, setRecruiterVisible] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number; url: string } | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const score = 58;
   const done = SECTIONS.filter((s) => s.done).length;
   const completePct = Math.round((done / SECTIONS.length) * 100);
+
+  async function handleFile(file: File | null | undefined) {
+    if (!file) return;
+    // Validate type
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext !== "pdf" && ext !== "docx") {
+      setUploadError("Only PDF and DOCX files are supported.");
+      return;
+    }
+    // Validate size (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("File must be under 5 MB.");
+      return;
+    }
+
+    setUploadState("uploading");
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "resumes");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      setUploadedFile({ name: file.name, size: file.size, url: data.url });
+      setUploadState("success");
+    } catch (err: any) {
+      setUploadError(err.message ?? "Upload failed. Please try again.");
+      setUploadState("error");
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -117,32 +153,93 @@ export default function ResumePage() {
             </div>
 
             {/* Upload zone */}
-            <div
-              className={cn(
-                "card p-8 border-2 border-dashed flex flex-col items-center gap-3 cursor-pointer select-none",
-                dragging ? "border-teal bg-teal-light" : "border-border hover:border-teal/60"
-              )}
-              onDragEnter={() => setDragging(true)}
-              onDragLeave={() => setDragging(false)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); setDragging(false); }}
-              onClick={() => fileRef.current?.click()}
-            >
-              <input ref={fileRef} type="file" accept=".pdf,.docx" className="hidden" />
-              <div className="h-12 w-12 rounded-full bg-teal-light flex items-center justify-center">
-                <Upload size={22} className="text-teal" />
+            {uploadState === "success" && uploadedFile ? (
+              <div className="card p-5 border-2 border-teal/40 bg-teal-light/30">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-teal-light flex items-center justify-center shrink-0">
+                    <FileText size={18} className="text-teal" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-ink truncate">{uploadedFile.name}</p>
+                    <p className="text-xs text-muted">{(uploadedFile.size / 1024).toFixed(0)} KB · Uploaded successfully</p>
+                  </div>
+                  <CheckCircle2 size={20} className="text-teal shrink-0" />
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <a
+                    href={uploadedFile.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-outline btn-sm flex items-center gap-1.5"
+                  >
+                    <Eye size={13} /> Preview
+                  </a>
+                  <a
+                    href={uploadedFile.url}
+                    download={uploadedFile.name}
+                    className="btn-outline btn-sm flex items-center gap-1.5"
+                  >
+                    <Download size={13} /> Download
+                  </a>
+                  <button
+                    className="btn-ghost btn-sm text-muted ml-auto"
+                    onClick={() => { setUploadState("idle"); setUploadedFile(null); if (fileRef.current) fileRef.current.value = ""; }}
+                  >
+                    Replace
+                  </button>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="font-medium text-sm text-ink">Drop your resume here</p>
-                <p className="text-xs text-muted mt-0.5">PDF or DOCX · up to 5 MB</p>
-              </div>
-              <button
-                className="btn-accent btn-sm"
-                onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+            ) : (
+              <div
+                className={cn(
+                  "card p-8 border-2 border-dashed flex flex-col items-center gap-3 cursor-pointer select-none transition-colors",
+                  dragging ? "border-teal bg-teal-light" : "border-border hover:border-teal/60",
+                  uploadState === "uploading" && "pointer-events-none opacity-70"
+                )}
+                onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  handleFile(e.dataTransfer.files[0]);
+                }}
+                onClick={() => uploadState !== "uploading" && fileRef.current?.click()}
               >
-                Browse files
-              </button>
-            </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".pdf,.docx"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0])}
+                />
+                <div className="h-12 w-12 rounded-full bg-teal-light flex items-center justify-center">
+                  {uploadState === "uploading"
+                    ? <div className="h-5 w-5 rounded-full border-2 border-teal border-t-transparent animate-spin" />
+                    : <Upload size={22} className="text-teal" />
+                  }
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm text-ink">
+                    {uploadState === "uploading" ? "Uploading…" : "Drop your resume here"}
+                  </p>
+                  <p className="text-xs text-muted mt-0.5">PDF or DOCX · up to 5 MB</p>
+                </div>
+                {uploadState !== "uploading" && (
+                  <button
+                    className="btn-accent btn-sm"
+                    onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+                  >
+                    Browse files
+                  </button>
+                )}
+                {(uploadState === "error" || uploadError) && (
+                  <p className="text-xs text-coral flex items-center gap-1">
+                    <AlertCircle size={12} /> {uploadError ?? "Upload failed. Please try again."}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Profile completeness */}
             <div className="card p-5">
