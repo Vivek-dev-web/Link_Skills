@@ -35,7 +35,7 @@ function LoginForm() {
       subtitle="Sign in to keep building your career."
       footer={
         <>
-          New to Atlas?{" "}
+          New to SkillWarehouse?{" "}
           <Link href="/register" className="text-coral font-medium">
             Create an account
           </Link>

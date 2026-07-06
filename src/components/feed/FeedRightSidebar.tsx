@@ -111,7 +111,7 @@ export default function FeedRightSidebar() {
                   >
                     {u.name}
                   </Link>
-                  <p className="text-[11px] text-muted truncate">{u.headline ?? "Atlas member"}</p>
+                  <p className="text-[11px] text-muted truncate">{u.headline ?? "SkillWarehouse member"}</p>
                 </div>
                 <button
                   onClick={() => connectWith(u.id)}

@@ -53,7 +53,7 @@ export default async function EmbedPostPage({ params }: { params: { id: string }
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal rounded-full px-3 py-1.5 hover:bg-teal-dark transition-colors"
         >
-          View on Atlas →
+          View on SkillWarehouse →
         </a>
       </div>
     </div>

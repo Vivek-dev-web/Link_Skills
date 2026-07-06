@@ -18,7 +18,7 @@ export default async function LandingPage() {
               Sign in
             </Link>
             <Link href="/register" className="btn-accent">
-              Join Atlas
+              Get started
             </Link>
           </div>
         </div>
@@ -28,14 +28,14 @@ export default async function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
         <div>
           <span className="chip-coral mb-5">
-            <MapPin size={12} /> One map, three destinations
+            <MapPin size={12} /> Skills first. Jobs second. Career always.
           </span>
           <h1 className="font-display text-5xl md:text-6xl leading-[1.05] text-ink mb-6">
-            Navigate your <em className="not-italic text-coral">whole</em> career, not just the next job.
+            Match your <em className="not-italic text-teal">skills</em> to the roles that actually fit.
           </h1>
           <p className="text-muted text-lg max-w-md mb-8">
-            Atlas connects the people you work with, the roles worth chasing, and the skills
-            that get you there — in one place, instead of three different tabs.
+            SkillWarehouse connects your verified skills to the right jobs, the right people,
+            and the right courses — in one place, not three different tabs.
           </p>
           <div className="flex items-center gap-3">
             <Link href="/register" className="btn-accent">
@@ -108,7 +108,7 @@ export default async function LandingPage() {
 
       <footer className="border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between text-xs text-muted">
-          <span>© {new Date().getFullYear()} Atlas</span>
+          <span>© {new Date().getFullYear()} SkillWarehouse</span>
           <span>Built for job seekers, professionals, recruiters, and training providers.</span>
         </div>
       </footer>

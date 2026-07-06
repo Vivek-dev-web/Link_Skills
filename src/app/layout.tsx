@@ -23,13 +23,13 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atlas — navigate your career",
+  title: "SkillWarehouse — match skills to the right roles",
   description:
-    "Atlas is a professional networking platform: build your network, find your next role, and grow your skills, in one place.",
+    "SkillWarehouse is a skill-based job platform: build verified skills, find the right role, and grow your professional network — all in one place.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Atlas",
+    title: "SkillWarehouse",
     statusBarStyle: "black-translucent",
   },
   icons: {

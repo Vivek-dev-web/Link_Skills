@@ -46,7 +46,7 @@ export const SAMPLE_FEED_COURSES: FeedCourse[] = [
   {
     id: "fc4",
     title: "Multi-Cloud Security: Azure, AWS & GCP",
-    provider: "Atlas Learning",
+    provider: "SkillWarehouse Learning",
     platform: "Multi-cloud",
     duration: "24 hrs",
     level: "Intermediate",

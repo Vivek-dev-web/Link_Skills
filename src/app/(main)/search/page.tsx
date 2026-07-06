@@ -51,7 +51,7 @@ function SearchInner() {
         />
       </form>
 
-      {!initialQ && <p className="text-sm text-muted">Type something to search across Atlas.</p>}
+      {!initialQ && <p className="text-sm text-muted">Type something to search across SkillWarehouse.</p>}
 
       {initialQ && results === null && (
         <div className="flex justify-center py-14">

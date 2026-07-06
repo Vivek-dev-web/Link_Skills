@@ -50,7 +50,7 @@ export default function FeedLeftSidebar() {
             {user?.name}
           </Link>
           <p className="text-xs text-muted truncate mt-0.5">
-            {user?.headline ?? "Atlas member"}
+            {user?.headline ?? "SkillWarehouse member"}
           </p>
 
           {/* Stats — clickable, link to /analytics */}

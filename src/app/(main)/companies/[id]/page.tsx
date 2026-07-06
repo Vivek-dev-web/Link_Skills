@@ -126,7 +126,7 @@ export default function CompanyPage() {
                   </a>
                 )}
                 <span className="text-xs text-muted flex items-center gap-1">
-                  <Users2 size={11} /> {company.employeesOnPlatform} on Atlas
+                  <Users2 size={11} /> {company.employeesOnPlatform} on SkillWarehouse
                 </span>
                 <span className="text-xs text-muted flex items-center gap-1">
                   <MapPin size={11} /> India
@@ -200,7 +200,7 @@ export default function CompanyPage() {
 
           {company.members?.length > 0 && (
             <div className="card p-5">
-              <p className="font-semibold text-sm text-ink mb-3">Recruiters on Atlas</p>
+              <p className="font-semibold text-sm text-ink mb-3">Recruiters on SkillWarehouse</p>
               <div className="flex flex-wrap gap-3">
                 {company.members.map((m: any) => (
                   <Link key={m.id} href={`/profile/${m.user.id}`} className="flex items-center gap-2 hover:underline">

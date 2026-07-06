@@ -106,7 +106,7 @@ export default function FollowingPage() {
                     <p className="text-xs text-muted truncate">
                       {f.followee.headline ??
                         [f.followee.currentRole, f.followee.currentCompany].filter(Boolean).join(" at ") ??
-                        "Atlas member"}
+                        "SkillWarehouse member"}
                     </p>
                   </div>
                   <button
@@ -159,7 +159,7 @@ export default function FollowingPage() {
                     <p className="text-xs text-muted truncate">
                       {f.follower.headline ??
                         [f.follower.currentRole, f.follower.currentCompany].filter(Boolean).join(" at ") ??
-                        "Atlas member"}
+                        "SkillWarehouse member"}
                     </p>
                   </div>
                 </div>

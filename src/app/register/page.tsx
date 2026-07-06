@@ -59,7 +59,7 @@ export default function RegisterPage() {
       subtitle="It only takes a minute to get started."
       footer={
         <>
-          Already on Atlas?{" "}
+          Already on SkillWarehouse?{" "}
           <Link href="/login" className="text-coral font-medium">
             Sign in
           </Link>

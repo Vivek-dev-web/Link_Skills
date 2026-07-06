@@ -1,7 +1,7 @@
 {
-  "name": "Atlas — Navigate Your Career",
-  "short_name": "Atlas",
-  "description": "Build your network, find your next role, and grow your skills — all in one place.",
+  "name": "SkillWarehouse",
+  "short_name": "SkillWH",
+  "description": "Match your skills to the right roles. Verify skills, find jobs, build your network — all in one place.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

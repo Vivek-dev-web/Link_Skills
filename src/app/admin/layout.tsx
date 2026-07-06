@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <ShieldAlert size={20} className="text-teal" />
-            <span className="font-display font-semibold text-sm">Atlas Admin</span>
+            <span className="font-display font-semibold text-sm">SkillWarehouse Admin</span>
           </div>
           <p className="text-[11px] text-white/40 mt-1 truncate">{session?.user?.email}</p>
         </div>

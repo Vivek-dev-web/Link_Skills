@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     data: { userId: user.id, token, expiresAt: new Date(Date.now() + 1000 * 60 * 60) },
   });
 
-  console.log(`[Atlas] Password reset link for ${user.email}: /reset-password?token=${token}`);
+  console.log(`[SkillWarehouse] Password reset link for ${user.email}: /reset-password?token=${token}`);
 
   return NextResponse.json({ ok: true, resetUrl: `/reset-password?token=${token}` });
 }

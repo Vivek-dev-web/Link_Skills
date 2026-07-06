@@ -69,7 +69,7 @@ const MOCK_EVENTS: Event[] = [
   {
     id: "4",
     title: "Full-Stack Dev Meetup — React & Next.js",
-    host: "Atlas Community",
+    host: "SkillWarehouse Community",
     date: "Sat, Jul 19, 2026",
     time: "3:00 PM",
     endTime: "6:00 PM",

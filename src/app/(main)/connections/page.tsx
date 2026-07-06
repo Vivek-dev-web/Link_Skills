@@ -166,7 +166,7 @@ export default function ConnectionsPage() {
                       <Link href={`/profile/${u.id}`} className="text-sm font-medium text-ink hover:underline block truncate">
                         {u.name}
                       </Link>
-                      <p className="text-xs text-muted truncate">{u.headline ?? "Atlas member"}</p>
+                      <p className="text-xs text-muted truncate">{u.headline ?? "SkillWarehouse member"}</p>
                       {u.mutualConnections > 0 && (
                         <p className="text-xs text-teal-dark mt-0.5">{u.mutualConnections} mutual connections</p>
                       )}
