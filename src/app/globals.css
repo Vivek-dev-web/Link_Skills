@@ -4,7 +4,7 @@
 
 :root {
   --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
@@ -29,27 +29,65 @@ body {
 }
 
 @layer components {
+
+  /* ── Cards ─────────────────────────────────────────────────── */
   .card {
-    @apply bg-surface rounded-xl2 border border-border shadow-card transition-shadow duration-200;
+    @apply bg-surface rounded-xl2 border border-border shadow-card transition-all duration-200;
   }
   .card-hover {
-    @apply card hover:shadow-hover hover:-translate-y-0.5 transition-all duration-200 cursor-pointer;
+    @apply card hover:shadow-hover hover:-translate-y-0.5 cursor-pointer;
+  }
+  .card-glow {
+    @apply card hover:-translate-y-0.5;
+    transition: box-shadow 0.25s ease, transform 0.2s ease;
+  }
+  .card-glow:hover {
+    box-shadow: 0 0 0 1.5px theme("colors.teal.DEFAULT"),
+                0 8px 32px rgba(0, 196, 167, 0.14);
+  }
+  /* Glass card for dark hero sections */
+  .card-glass {
+    @apply rounded-xl2 border border-white/10 backdrop-blur-md;
+    background: rgba(255, 255, 255, 0.06);
   }
 
+  /* ── Buttons ────────────────────────────────────────────────── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
     @apply btn bg-ink text-paper hover:bg-brand-mid;
   }
   .btn-accent {
-    @apply btn bg-teal text-white hover:bg-teal-dark;
+    @apply btn text-white;
+    background: linear-gradient(135deg, #00C4A7 0%, #009986 100%);
+    box-shadow: 0 2px 8px rgba(0, 196, 167, 0.30);
+  }
+  .btn-accent:hover {
+    background: linear-gradient(135deg, #00D4B5 0%, #00C4A7 100%);
+    box-shadow: 0 4px 18px rgba(0, 196, 167, 0.45);
+    transform: translateY(-1px);
+  }
+  .btn-accent:active {
+    transform: translateY(0);
+  }
+  .btn-violet {
+    @apply btn text-white;
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.28);
+  }
+  .btn-violet:hover {
+    box-shadow: 0 4px 18px rgba(124, 58, 237, 0.42);
+    transform: translateY(-1px);
   }
   .btn-coral {
     @apply btn bg-coral text-white hover:bg-coral-dark;
   }
   .btn-outline {
-    @apply btn border border-border bg-surface text-ink hover:bg-paper;
+    @apply btn border border-border bg-surface text-ink hover:bg-paper hover:border-teal/40;
+  }
+  .btn-outline-white {
+    @apply btn border border-white/20 text-white hover:bg-white/10;
   }
   .btn-ghost {
     @apply btn text-ink hover:bg-paper;
@@ -58,8 +96,9 @@ body {
     @apply px-3 py-1.5 text-xs;
   }
 
+  /* ── Forms ──────────────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-teal focus:outline-none;
+    @apply w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:border-teal focus:outline-none transition-colors;
   }
   .textarea {
     @apply input resize-y;
@@ -68,23 +107,93 @@ body {
     @apply block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5;
   }
 
+  /* ── Chips / Badges ─────────────────────────────────────────── */
   .chip {
     @apply inline-flex items-center gap-1 rounded-full bg-paper border border-border px-3 py-1 text-xs font-medium text-ink;
   }
-  .chip-coral {
-    @apply chip bg-coral-light border-coral/20 text-coral-dark;
+  .chip-coral  { @apply chip bg-coral-light  border-coral/20  text-coral-dark; }
+  .chip-teal   { @apply chip bg-teal-light   border-teal/20   text-teal-dark; }
+  .chip-amber  { @apply chip bg-amber-light  border-amber/20  text-amber-dark; }
+  .chip-violet { @apply chip bg-violet-light border-violet/20 text-violet-dark; }
+  .chip-brand  { @apply chip bg-brand-light  border-brand/20  text-brand-mid; }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
   }
-  .chip-teal {
-    @apply chip bg-teal-light border-teal/20 text-teal-dark;
-  }
-  .chip-amber {
-    @apply chip bg-amber-light border-amber/20 text-amber-dark;
-  }
-  .chip-brand {
-    @apply chip bg-brand-light border-brand/20 text-brand-mid;
+  .badge-teal   { @apply badge bg-teal-light   text-teal-dark; }
+  .badge-coral  { @apply badge bg-coral-light  text-coral-dark; }
+  .badge-amber  { @apply badge bg-amber-light  text-amber-dark; }
+  .badge-violet { @apply badge bg-violet-light text-violet-dark; }
+  .badge-new {
+    @apply badge text-white;
+    background: linear-gradient(135deg, #00C4A7, #009986);
   }
 
-  /* Career route-line timeline */
+  /* ── Gradient text ──────────────────────────────────────────── */
+  .gradient-text-teal {
+    background: linear-gradient(135deg, #00C4A7 0%, #009986 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gradient-text-violet {
+    background: linear-gradient(135deg, #7C3AED 0%, #00C4A7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gradient-text-warm {
+    background: linear-gradient(135deg, #FF6B47 0%, #F59E0B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Hero / section backgrounds ─────────────────────────────── */
+  .gradient-brand {
+    background: linear-gradient(135deg, #1B1F3B 0%, #0F1225 100%);
+  }
+  .gradient-teal {
+    background: linear-gradient(135deg, #00C4A7 0%, #009986 100%);
+  }
+  .mesh-hero {
+    background-image:
+      radial-gradient(ellipse at 15% 55%, rgba(0,196,167,0.14) 0%, transparent 48%),
+      radial-gradient(ellipse at 85% 20%, rgba(124,58,237,0.10) 0%, transparent 42%),
+      radial-gradient(ellipse at 55% 85%, rgba(255,107,71,0.07) 0%, transparent 40%),
+      linear-gradient(135deg, #1B1F3B 0%, #0F1225 60%, #131F2E 100%);
+  }
+  .section-teal {
+    background: linear-gradient(135deg, rgba(0,196,167,0.06) 0%, rgba(0,196,167,0.02) 100%);
+  }
+  .section-violet {
+    background: linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(124,58,237,0.01) 100%);
+  }
+
+  /* ── Feature icon containers ─────────────────────────────────── */
+  .icon-bubble {
+    @apply h-12 w-12 rounded-xl flex items-center justify-center shrink-0;
+  }
+  .icon-bubble-teal   { @apply icon-bubble bg-teal-light   text-teal-dark; }
+  .icon-bubble-coral  { @apply icon-bubble bg-coral-light  text-coral-dark; }
+  .icon-bubble-amber  { @apply icon-bubble bg-amber-light  text-amber-dark; }
+  .icon-bubble-violet { @apply icon-bubble bg-violet-light text-violet-dark; }
+  .icon-bubble-brand  { @apply icon-bubble bg-brand-light  text-brand-mid; }
+
+  /* ── Section label pill ─────────────────────────────────────── */
+  .section-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full text-xs font-bold px-3 py-1.5 uppercase tracking-wide;
+  }
+  .section-pill-teal   { @apply section-pill bg-teal-light   text-teal-dark; }
+  .section-pill-violet { @apply section-pill bg-violet-light text-violet-dark; }
+  .section-pill-coral  { @apply section-pill bg-coral-light  text-coral-dark; }
+
+  /* ── Stat display ───────────────────────────────────────────── */
+  .stat-number {
+    @apply font-display text-4xl font-bold text-ink leading-none;
+  }
+
+  /* ── Career timeline ────────────────────────────────────────── */
   .route-line {
     @apply relative pl-7;
   }
@@ -95,22 +204,21 @@ body {
     background-size: 1px 8px;
     background-repeat: repeat-y;
   }
-  .route-node {
-    @apply absolute -left-7 top-1.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-teal;
-  }
-  .route-node-done {
-    @apply route-node bg-teal border-teal;
-  }
+  .route-node      { @apply absolute -left-7 top-1.5 h-3.5 w-3.5 rounded-full bg-surface border-2 border-teal; }
+  .route-node-done { @apply route-node bg-teal border-teal; }
 
+  /* ── Skeleton ───────────────────────────────────────────────── */
   .skeleton {
     @apply animate-pulse bg-border/60 rounded;
   }
 
-  /* Gradient hero used on landing page and banners */
-  .gradient-brand {
-    background: linear-gradient(135deg, #1B1F3B 0%, #2D3158 100%);
+  /* ── Divider with label ─────────────────────────────────────── */
+  .divider-label {
+    @apply flex items-center gap-3 text-xs text-muted;
   }
-  .gradient-teal {
-    background: linear-gradient(135deg, #00C4A7 0%, #1B1F3B 100%);
+  .divider-label::before,
+  .divider-label::after {
+    content: "";
+    @apply flex-1 h-px bg-border;
   }
 }

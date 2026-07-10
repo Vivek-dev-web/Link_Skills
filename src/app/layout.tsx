@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
@@ -10,10 +10,10 @@ const fraunces = Fraunces({
   style: ["normal", "italic"],
 });
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const mono = JetBrains_Mono({
@@ -51,7 +51,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mono.variable}`}>
+    <html lang="en" className={`${fraunces.variable} ${jakarta.variable} ${mono.variable}`}>
       <body className="font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
