@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const ROLE_HOME: Record<string, string> = {
   MEMBER:    "/feed",
   RECRUITER: "/hire",
-  PROVIDER:  "/learning",
+  PROVIDER:  "/courses",
 };
 
 const ROLE_OPTIONS = [

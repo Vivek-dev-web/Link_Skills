@@ -8,7 +8,7 @@ import { signIn, getSession } from "next-auth/react";
 const ROLE_HOME: Record<string, string> = {
   MEMBER:    "/feed",
   RECRUITER: "/hire",
-  PROVIDER:  "/learning",
+  PROVIDER:  "/courses",
 };
 import { Loader2 } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
