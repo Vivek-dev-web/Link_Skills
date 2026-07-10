@@ -73,6 +73,7 @@ model User {
 
   notificationPrefs NotificationPreference?
   passwordResets    PasswordResetToken[]
+  consultations     Consultation[]
 
   @@schema("jobwarehouse")
 }
@@ -532,6 +533,32 @@ model Report {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+  @@schema("jobwarehouse")
+}
+
+// ───────────────────────── Guidance / Career ─────────────────────────
+
+model Consultation {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String    // STUDENT | PROFESSIONAL
+  // Student fields
+  college       String?
+  yearOfStudy   String?
+  interestArea  String?
+  question      String?
+  timeSlot      String?
+  // Professional fields
+  currentRole   String?
+  yearsExp      Int?
+  goal          String?
+  challenge     String?
+  mode          String?
+  availableFrom DateTime?
+  status        String    @default("PENDING") // PENDING | MATCHED | COMPLETED
+  createdAt     DateTime  @default(now())
+
   @@schema("jobwarehouse")
 }
 

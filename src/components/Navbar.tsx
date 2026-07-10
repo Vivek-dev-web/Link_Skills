@@ -35,11 +35,12 @@ import Avatar from "@/components/Avatar";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/feed", label: "Feed", icon: Home },
-  { href: "/network", label: "Network", icon: Users },
-  { href: "/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/courses", label: "Learning", icon: GraduationCap },
+  { href: "/feed",     label: "Feed",     icon: Home },
+  { href: "/network",  label: "Network",  icon: Users },
+  { href: "/jobs",     label: "Jobs",     icon: Briefcase },
+  { href: "/courses",  label: "Learning", icon: GraduationCap },
   { href: "/messages", label: "Messages", icon: MessageCircle },
+  { href: "/guidance", label: "Guidance", icon: Sparkles },
 ];
 
 export default function Navbar() {
