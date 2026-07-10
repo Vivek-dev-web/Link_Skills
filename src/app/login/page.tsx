@@ -3,7 +3,13 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
+
+const ROLE_HOME: Record<string, string> = {
+  MEMBER:    "/feed",
+  RECRUITER: "/hire",
+  PROVIDER:  "/learning",
+};
 import { Loader2 } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 
@@ -25,7 +31,15 @@ function LoginForm() {
       setError(res.error === "CredentialsSignin" ? "Incorrect email or password." : res.error);
       return;
     }
-    router.push(searchParams.get("callbackUrl") || "/feed");
+    // callbackUrl takes priority (e.g. user was bounced to login mid-flow)
+    const callbackUrl = searchParams.get("callbackUrl");
+    if (callbackUrl) {
+      router.push(callbackUrl);
+    } else {
+      const session = await getSession();
+      const role = (session?.user as any)?.role as string | undefined;
+      router.push(ROLE_HOME[role ?? ""] ?? "/feed");
+    }
     router.refresh();
   }
 

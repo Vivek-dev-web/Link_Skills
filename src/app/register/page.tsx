@@ -8,6 +8,12 @@ import { Loader2, Briefcase, GraduationCap, User } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { cn } from "@/lib/utils";
 
+const ROLE_HOME: Record<string, string> = {
+  MEMBER:    "/feed",
+  RECRUITER: "/hire",
+  PROVIDER:  "/learning",
+};
+
 const ROLE_OPTIONS = [
   { value: "MEMBER", label: "Job seeker / professional", icon: User },
   { value: "RECRUITER", label: "Recruiter / hiring", icon: Briefcase },
@@ -45,7 +51,7 @@ export default function RegisterPage() {
         router.push("/login");
         return;
       }
-      router.push("/feed");
+      router.push(ROLE_HOME[role] ?? "/feed");
       router.refresh();
     } catch {
       setError("Something went wrong. Try again.");
