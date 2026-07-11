@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
 
@@ -180,7 +182,35 @@ export default function LearnPage() {
         <h1 className="font-display text-2xl text-ink mb-4">{activeLesson.title}</h1>
 
         {activeLesson.type === "TEXT" && (
-          <p className="text-sm text-ink whitespace-pre-wrap leading-relaxed">{activeLesson.content}</p>
+          <div className="prose-lesson">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 className="font-display text-xl text-ink font-bold mt-6 mb-3">{children}</h1>,
+                h2: ({ children }) => <h2 className="font-display text-lg text-ink font-semibold mt-5 mb-2">{children}</h2>,
+                h3: ({ children }) => <h3 className="font-display text-base text-ink font-semibold mt-4 mb-1.5">{children}</h3>,
+                p: ({ children }) => <p className="text-sm text-ink leading-relaxed mb-3">{children}</p>,
+                strong: ({ children }) => <strong className="font-semibold text-ink">{children}</strong>,
+                em: ({ children }) => <em className="italic text-muted">{children}</em>,
+                ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3 text-sm text-ink">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3 text-sm text-ink">{children}</ol>,
+                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                code: ({ inline, children }: any) =>
+                  inline ? (
+                    <code className="bg-paper border border-border rounded px-1.5 py-0.5 text-xs font-mono text-teal">{children}</code>
+                  ) : (
+                    <code className="block bg-[#0f1117] text-green-300 text-xs font-mono rounded-lg p-4 overflow-x-auto mb-3 leading-relaxed whitespace-pre">{children}</code>
+                  ),
+                pre: ({ children }) => <>{children}</>,
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-teal/40 pl-4 italic text-muted text-sm mb-3">{children}</blockquote>
+                ),
+                hr: () => <hr className="border-border my-4" />,
+              }}
+            >
+              {activeLesson.content}
+            </ReactMarkdown>
+          </div>
         )}
 
         {activeLesson.type === "VIDEO" && (
