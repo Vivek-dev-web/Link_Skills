@@ -15,6 +15,7 @@ import {
   ChevronDown,
   LogOut,
   Settings,
+  ShieldAlert,
   User as UserIcon,
   Home,
   FileText,
@@ -217,6 +218,15 @@ export default function Navbar() {
               ))}
 
               <div className="border-t border-border mt-1 pt-1">
+                {(session?.user as any)?.role === "ADMIN" && (
+                  <Link
+                    href="/admin/consultations"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-paper transition-colors text-teal font-medium"
+                  >
+                    <ShieldAlert size={16} /> Admin Panel
+                  </Link>
+                )}
                 <Link
                   href="/settings"
                   onClick={() => setMenuOpen(false)}
