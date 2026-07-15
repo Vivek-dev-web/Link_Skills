@@ -7,7 +7,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Eye,
   Users,
   BarChart2,
   FileText,
@@ -490,9 +489,12 @@ export default function AnalyticsPage() {
                           <span>{post.impressions} impression{post.impressions !== 1 ? "s" : ""}</span>
                           <Dot size={12} />
                           <span>{post.engagements} engagement{post.engagements !== 1 ? "s" : ""}</span>
-                          <button className="ml-auto text-teal hover:underline font-medium flex items-center gap-1">
+                          <Link
+                            href="/analytics?tab=content"
+                            className="ml-auto text-teal hover:underline font-medium flex items-center gap-1"
+                          >
                             View analytics <ArrowRight size={11} />
-                          </button>
+                          </Link>
                         </div>
                         <p className="text-sm text-ink line-clamp-2">{post.content}</p>
                       </div>

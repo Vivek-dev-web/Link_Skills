@@ -26,9 +26,9 @@ export default function FeedRightSidebar() {
   const [connected, setConnected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/users/suggestions").then((r) => r.json()).then((d) => setSuggestions((d.users ?? []).slice(0, 4)));
-    fetch("/api/jobs/recommended").then((r) => r.json()).then((d) => setJobs((d.jobs ?? []).slice(0, 3)));
-    fetch("/api/trending").then((r) => r.json()).then((d) => setTrending(d.trending ?? []));
+    fetch("/api/users/suggestions").then((r) => r.json()).then((d) => setSuggestions((d.users ?? []).slice(0, 3)));
+    fetch("/api/jobs/recommended").then((r) => r.json()).then((d) => setJobs((d.jobs ?? []).slice(0, 2)));
+    fetch("/api/trending").then((r) => r.json()).then((d) => setTrending((d.trending ?? []).slice(0, 4)));
   }, []);
 
   async function connectWith(userId: string) {
@@ -92,8 +92,9 @@ export default function FeedRightSidebar() {
           </div>
           <div className="space-y-2">
             {trending.map((t, i) => (
-              <div key={t.tag}
-                className="flex items-center gap-2.5 group cursor-pointer rounded-lg px-2 py-1.5 hover:bg-paper transition-colors">
+              <Link key={t.tag}
+                href={`/search?q=${encodeURIComponent(t.tag)}`}
+                className="flex items-center gap-2.5 group rounded-lg px-2 py-1.5 hover:bg-paper transition-colors">
                 <span className="text-xs font-bold text-muted w-4 shrink-0">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <span className={`inline-flex items-center gap-0.5 text-xs font-semibold rounded-full border px-2 py-0.5 ${TAG_COLORS[i % TAG_COLORS.length]}`}>
@@ -101,7 +102,7 @@ export default function FeedRightSidebar() {
                   </span>
                   <p className="text-[10px] text-muted mt-0.5">{t.posts}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
