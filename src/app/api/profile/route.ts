@@ -28,8 +28,8 @@ export async function PATCH(req: Request) {
 
   const body = await req.json();
   const allowed: Record<string, any> = {};
-  if (typeof body.image === "string") allowed.image = body.image;
-  if (typeof body.resumeUrl === "string") allowed.resumeUrl = body.resumeUrl;
+  if (typeof body.image === "string" || body.image === null) allowed.image = body.image ?? null;
+  if (typeof body.resumeUrl === "string" || body.resumeUrl === null) allowed.resumeUrl = body.resumeUrl ?? null;
 
   const user = await prisma.user.update({ where: { id: session.user.id }, data: allowed });
   return NextResponse.json(user);
