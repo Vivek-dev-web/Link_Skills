@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, Plus, Pencil, Trash2, Upload, FileText } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Upload, FileText, X } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import SkillTagInput from "@/components/SkillTagInput";
 import CompletenessBar from "@/components/profile/CompletenessBar";
@@ -91,6 +91,18 @@ export default function ProfileEditPage() {
     setProfile((p: any) => ({ ...p, image: data.url }));
     await update({ image: data.url });
     show("Photo updated", "success");
+  }
+
+  async function handleRemovePhoto() {
+    if (!confirm("Remove your profile photo?")) return;
+    await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: null }),
+    });
+    setProfile((p: any) => ({ ...p, image: null }));
+    await update({ image: null });
+    show("Photo removed", "success");
   }
 
   async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -201,6 +213,11 @@ export default function ProfileEditPage() {
             <Upload size={14} /> Change photo
           </button>
           <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={handlePhotoUpload} />
+          {profile.image && (
+            <button onClick={handleRemovePhoto} className="btn-outline btn-sm text-coral border-coral/40 hover:bg-coral/5">
+              <X size={14} /> Remove photo
+            </button>
+          )}
           <div>
             <button onClick={() => resumeInputRef.current?.click()} className="btn-outline btn-sm">
               <FileText size={14} /> {profile.resumeUrl ? "Replace resume" : "Upload resume"}
