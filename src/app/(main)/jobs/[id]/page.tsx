@@ -88,7 +88,7 @@ export default function JobDetailPage() {
               {job.remote && <span className="chip-teal !py-0.5">Remote</span>}
               <span>Posted {formatRelativeTime(job.createdAt)}</span>
             </div>
-            <p className="font-mono text-sm text-ink mt-2">{formatSalary(job.salaryMin, job.salaryMax)}</p>
+            <p className="font-mono text-sm text-ink mt-2">{formatSalary(job.salaryMin, job.salaryMax, job.location)}</p>
           </div>
           <button onClick={toggleSave} className={cn("p-2 rounded-full hover:bg-paper shrink-0", job.isSaved && "text-coral")}>
             <Bookmark size={18} className={job.isSaved ? "fill-coral" : ""} />

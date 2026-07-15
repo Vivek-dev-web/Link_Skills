@@ -41,7 +41,7 @@ export default function FeedLeftSidebar() {
       {/* ── Profile card ───────────────────────────────────────── */}
       <div className="card">
         {/* Banner */}
-        <div className="relative h-[72px] overflow-hidden"
+        <div className="relative h-[48px] overflow-hidden"
           style={{ background: "linear-gradient(135deg, #0B1120 0%, #0D3B38 50%, #0F7A72 100%)" }}>
           {/* grid pattern */}
           <svg className="absolute inset-0 w-full h-full opacity-[0.15]" xmlns="http://www.w3.org/2000/svg">

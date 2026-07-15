@@ -53,13 +53,24 @@ export function initials(name: string): string {
     .join("");
 }
 
-export function formatSalary(min?: number | null, max?: number | null): string {
+export function formatSalary(min?: number | null, max?: number | null, location?: string | null): string {
   if (!min && !max) return "Salary not specified";
-  const fmt = (n: number) =>
-    n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`;
-  if (min && max) return `${fmt(min)} – ${fmt(max)}`;
-  if (min) return `From ${fmt(min)}`;
-  if (max) return `Up to ${fmt(max)}`;
+
+  const isIndia = location
+    ? /, IN\b|India|Bangalore|Mumbai|Delhi|Pune|Hyderabad|Chennai|Bengaluru/.test(location)
+    : (min ?? 0) >= 500_000 || (max ?? 0) >= 500_000; // fallback: large numbers = rupees
+
+  if (isIndia) {
+    const lpa = (n: number) => `${Math.round(n / 100_000)} LPA`;
+    if (min && max) return `${lpa(min)} – ${lpa(max)}`;
+    if (min) return `From ${lpa(min)}`;
+    if (max) return `Up to ${lpa(max)}`;
+  }
+
+  const usd = (n: number) => n >= 1000 ? `$${Math.round(n / 1000)}k` : `$${n}`;
+  if (min && max) return `${usd(min)} – ${usd(max)}`;
+  if (min) return `From ${usd(min)}`;
+  if (max) return `Up to ${usd(max)}`;
   return "Salary not specified";
 }
 

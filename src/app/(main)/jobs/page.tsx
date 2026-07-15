@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Search, MapPin, Loader2, Briefcase, Bookmark, ListChecks,
-  PlusCircle, SlidersHorizontal, Star, Zap, ChevronDown, X,
+  PlusCircle, SlidersHorizontal, Star, Zap, ChevronDown, X, Check,
 } from "lucide-react";
 import JobCard from "@/components/JobCard";
 import EmptyState from "@/components/EmptyState";
-import { WORK_TYPES, WORK_TYPE_LABELS, EXPERIENCE_LEVELS, EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
+import { WORK_TYPES, WORK_TYPE_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const SKILL_OPTIONS = ["AWS", "Azure", "GCP", "Python", "Databricks", "Spark", "Terraform", "Docker", "Kubernetes", "SQL", "React", "Node.js", "Java", "Scala", "Airflow"];
@@ -19,8 +19,22 @@ const SORT_OPTIONS = [
   { value: "salary_desc", label: "Salary (High to Low)" },
 ];
 const INDUSTRY_OPTIONS = ["Technology", "Finance", "E-Commerce", "Healthcare", "Consulting", "Media", "Manufacturing"];
+const COMPANY_TYPE_OPTIONS = ["Product", "Service", "Startup", "MNC", "Consulting"];
+const DATE_POSTED_OPTIONS = [
+  { value: "", label: "Any time" },
+  { value: "1", label: "Past 24 hours" },
+  { value: "7", label: "Past week" },
+  { value: "30", label: "Past month" },
+];
+const EXP_OPTIONS = [
+  { val: "ENTRY", label: "0–1 yr (Fresher)" },
+  { val: "MID", label: "1–3 yrs" },
+  { val: "SENIOR", label: "3–5 yrs" },
+  { val: "LEAD", label: "5–10 yrs" },
+  { val: "EXECUTIVE", label: "10+ yrs" },
+];
 
-const FILTER_PILLS = ["Experience", "Salary", "Job Type", "Industry", "Date Posted", "Company Type"];
+type DropdownKey = "Experience" | "Salary" | "Job Type" | "Industry" | "Date Posted" | "Company Type";
 
 export default function JobsPage() {
   const [q, setQ] = useState("");
@@ -36,7 +50,12 @@ export default function JobsPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedModes, setSelectedModes] = useState<string[]>([]);
   const [salaryMin, setSalaryMin] = useState(0);
+  const [industry, setIndustry] = useState("");
+  const [companyType, setCompanyType] = useState("");
+  const [datePosted, setDatePosted] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const search = useCallback(async () => {
     setJobs(null);
@@ -48,12 +67,14 @@ export default function JobsPage() {
     if (remoteOnly) params.set("remote", "true");
     if (sort !== "relevance") params.set("sort", sort);
     if (salaryMin > 0) params.set("minSalary", String(salaryMin * 100000));
+    if (industry) params.set("industry", industry);
+    if (datePosted) params.set("daysAgo", datePosted);
     selectedSkills.forEach((s) => params.append("skill", s));
     const res = await fetch(`/api/jobs?${params.toString()}`);
     const data = await res.json();
     setJobs(data.jobs ?? []);
     setTotal(data.total ?? 0);
-  }, [q, location, workType, experienceLevel, remoteOnly, sort, salaryMin, selectedSkills]);
+  }, [q, location, workType, experienceLevel, remoteOnly, sort, salaryMin, selectedSkills, industry, datePosted]);
 
   useEffect(() => {
     search();
@@ -61,6 +82,17 @@ export default function JobsPage() {
       .then((r) => r.json())
       .then((d) => setSavedIds(new Set((d.jobs ?? []).map((j: any) => j.id))));
   }, [search]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   async function toggleSave(jobId: string) {
     const res = await fetch(`/api/jobs/${jobId}/save`, { method: "POST" });
@@ -88,6 +120,45 @@ export default function JobsPage() {
     if (mode === "Remote") setRemoteOnly((v) => !v);
   }
 
+  function toggleDropdown(key: DropdownKey) {
+    setOpenDropdown((prev) => (prev === key ? null : key));
+  }
+
+  function pillLabel(key: DropdownKey): string {
+    if (key === "Experience" && experienceLevel) {
+      return EXP_OPTIONS.find((e) => e.val === experienceLevel)?.label ?? key;
+    }
+    if (key === "Salary" && salaryMin > 0) return `${salaryMin}+ LPA`;
+    if (key === "Job Type" && workType) return WORK_TYPE_LABELS[workType] ?? key;
+    if (key === "Industry" && industry) return industry;
+    if (key === "Date Posted" && datePosted) {
+      return DATE_POSTED_OPTIONS.find((d) => d.value === datePosted)?.label ?? key;
+    }
+    if (key === "Company Type" && companyType) return companyType;
+    return key;
+  }
+
+  function pillActive(key: DropdownKey): boolean {
+    if (key === "Experience") return !!experienceLevel;
+    if (key === "Salary") return salaryMin > 0;
+    if (key === "Job Type") return !!workType;
+    if (key === "Industry") return !!industry;
+    if (key === "Date Posted") return !!datePosted;
+    if (key === "Company Type") return !!companyType;
+    return false;
+  }
+
+  function clearPill(key: DropdownKey) {
+    if (key === "Experience") setExperienceLevel("");
+    if (key === "Salary") setSalaryMin(0);
+    if (key === "Job Type") setWorkType("");
+    if (key === "Industry") setIndustry("");
+    if (key === "Date Posted") setDatePosted("");
+    if (key === "Company Type") setCompanyType("");
+  }
+
+  const FILTER_PILLS: DropdownKey[] = ["Experience", "Salary", "Job Type", "Industry", "Date Posted", "Company Type"];
+
   return (
     <div className="max-w-6xl mx-auto space-y-4">
       {/* Hero search bar */}
@@ -114,13 +185,158 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* Filter pills */}
-        <div className="flex flex-wrap gap-2 items-center">
-          {FILTER_PILLS.map((pill) => (
-            <button key={pill} className="chip hover:border-teal hover:text-teal transition-colors">
-              {pill} <ChevronDown size={11} />
-            </button>
-          ))}
+        {/* Filter pills with dropdowns */}
+        <div ref={dropdownRef} className="flex flex-wrap gap-2 items-center relative">
+          {FILTER_PILLS.map((pill) => {
+            const active = pillActive(pill);
+            const isOpen = openDropdown === pill;
+            return (
+              <div key={pill} className="relative">
+                <button
+                  onClick={() => toggleDropdown(pill)}
+                  className={cn(
+                    "flex items-center gap-1 rounded-full border text-xs px-3 py-1.5 transition-all",
+                    active
+                      ? "bg-teal text-white border-teal font-semibold"
+                      : "bg-paper border-border text-ink hover:border-teal hover:text-teal",
+                    isOpen && !active && "border-teal text-teal"
+                  )}
+                >
+                  {pillLabel(pill)}
+                  {active ? (
+                    <span
+                      onClick={(e) => { e.stopPropagation(); clearPill(pill); }}
+                      className="ml-0.5 hover:opacity-70"
+                    >
+                      <X size={11} />
+                    </span>
+                  ) : (
+                    <ChevronDown size={11} className={cn("transition-transform", isOpen && "rotate-180")} />
+                  )}
+                </button>
+
+                {/* Dropdown panel */}
+                {isOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 z-50 min-w-[200px] card p-3 shadow-lg border border-border animate-in fade-in slide-in-from-top-1 duration-100">
+                    {pill === "Experience" && (
+                      <div className="space-y-1.5">
+                        {EXP_OPTIONS.map((e) => (
+                          <label key={e.val} className="flex items-center gap-2 text-xs text-ink cursor-pointer hover:text-teal py-0.5">
+                            <input
+                              type="radio"
+                              name="exp-drop"
+                              checked={experienceLevel === e.val}
+                              onChange={() => { setExperienceLevel(e.val); setOpenDropdown(null); }}
+                              className="accent-teal"
+                            />
+                            {e.label}
+                          </label>
+                        ))}
+                        {experienceLevel && (
+                          <button onClick={() => { setExperienceLevel(""); setOpenDropdown(null); }}
+                            className="text-[11px] text-coral hover:underline mt-1">
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {pill === "Salary" && (
+                      <div className="w-52">
+                        <p className="text-[11px] text-muted mb-2">Minimum salary</p>
+                        <input
+                          type="range" min={0} max={50} step={5}
+                          value={salaryMin}
+                          onChange={(e) => setSalaryMin(Number(e.target.value))}
+                          className="w-full accent-teal"
+                        />
+                        <div className="flex justify-between text-[11px] text-muted mt-1">
+                          <span>0 LPA</span>
+                          <span className="text-teal font-semibold">{salaryMin > 0 ? `${salaryMin}+ LPA` : "Any"}</span>
+                          <span>50 LPA</span>
+                        </div>
+                        <button onClick={() => setOpenDropdown(null)}
+                          className="mt-2 w-full btn-accent btn-sm text-xs justify-center">
+                          Apply
+                        </button>
+                      </div>
+                    )}
+
+                    {pill === "Job Type" && (
+                      <div className="space-y-1.5">
+                        {WORK_TYPES.map((w) => (
+                          <label key={w} className="flex items-center gap-2 text-xs text-ink cursor-pointer hover:text-teal py-0.5">
+                            <input
+                              type="checkbox"
+                              checked={workType === w}
+                              onChange={() => { setWorkType(workType === w ? "" : w); setOpenDropdown(null); }}
+                              className="accent-teal"
+                            />
+                            {WORK_TYPE_LABELS[w]}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {pill === "Industry" && (
+                      <div className="space-y-1">
+                        {INDUSTRY_OPTIONS.map((ind) => (
+                          <button
+                            key={ind}
+                            onClick={() => { setIndustry(industry === ind ? "" : ind); setOpenDropdown(null); }}
+                            className={cn(
+                              "flex items-center justify-between w-full text-xs px-2 py-1.5 rounded-lg hover:bg-paper transition-colors",
+                              industry === ind ? "text-teal font-semibold" : "text-ink"
+                            )}
+                          >
+                            {ind}
+                            {industry === ind && <Check size={11} />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {pill === "Date Posted" && (
+                      <div className="space-y-1">
+                        {DATE_POSTED_OPTIONS.map((d) => (
+                          <button
+                            key={d.value}
+                            onClick={() => { setDatePosted(d.value); setOpenDropdown(null); }}
+                            className={cn(
+                              "flex items-center justify-between w-full text-xs px-2 py-1.5 rounded-lg hover:bg-paper transition-colors",
+                              datePosted === d.value ? "text-teal font-semibold" : "text-ink"
+                            )}
+                          >
+                            {d.label}
+                            {datePosted === d.value && <Check size={11} />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {pill === "Company Type" && (
+                      <div className="space-y-1">
+                        {COMPANY_TYPE_OPTIONS.map((ct) => (
+                          <button
+                            key={ct}
+                            onClick={() => { setCompanyType(companyType === ct ? "" : ct); setOpenDropdown(null); }}
+                            className={cn(
+                              "flex items-center justify-between w-full text-xs px-2 py-1.5 rounded-lg hover:bg-paper transition-colors",
+                              companyType === ct ? "text-teal font-semibold" : "text-ink"
+                            )}
+                          >
+                            {ct}
+                            {companyType === ct && <Check size={11} />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
           <label className="flex items-center gap-1.5 text-xs text-ink ml-auto cursor-pointer">
             <input
               type="checkbox"
@@ -167,6 +383,7 @@ export default function JobsPage() {
                 onClick={() => {
                   setExperienceLevel(""); setWorkType(""); setSelectedSkills([]);
                   setSelectedModes([]); setSalaryMin(0); setRemoteOnly(false);
+                  setIndustry(""); setCompanyType(""); setDatePosted("");
                 }}
               >
                 Clear all
@@ -177,13 +394,7 @@ export default function JobsPage() {
             <div>
               <p className="label">Experience</p>
               <div className="space-y-1.5">
-                {[
-                  { val: "ENTRY", label: "0–1 yr" },
-                  { val: "MID", label: "1–3 yrs" },
-                  { val: "SENIOR", label: "3–5 yrs" },
-                  { val: "LEAD", label: "5–10 yrs" },
-                  { val: "EXECUTIVE", label: "10+ yrs" },
-                ].map((e) => (
+                {EXP_OPTIONS.map((e) => (
                   <label key={e.val} className="flex items-center gap-2 text-xs text-ink cursor-pointer">
                     <input
                       type="radio"
@@ -276,7 +487,11 @@ export default function JobsPage() {
             {/* Industry */}
             <div>
               <p className="label">Industry</p>
-              <select className="input !text-xs !py-1.5">
+              <select
+                className="input !text-xs !py-1.5"
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+              >
                 <option value="">All industries</option>
                 {INDUSTRY_OPTIONS.map((i) => <option key={i}>{i}</option>)}
               </select>
@@ -284,12 +499,17 @@ export default function JobsPage() {
 
             {/* Top Companies */}
             <div>
-              <p className="label">Top Companies</p>
+              <p className="label">Company Type</p>
               <div className="space-y-1.5">
-                {["Google", "Microsoft", "Flipkart", "Amazon", "Swiggy"].map((co) => (
-                  <label key={co} className="flex items-center gap-2 text-xs text-ink cursor-pointer">
-                    <input type="checkbox" className="accent-teal" />
-                    <Star size={10} className="text-amber" /> {co}
+                {COMPANY_TYPE_OPTIONS.map((ct) => (
+                  <label key={ct} className="flex items-center gap-2 text-xs text-ink cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={companyType === ct}
+                      onChange={() => setCompanyType(companyType === ct ? "" : ct)}
+                      className="accent-teal"
+                    />
+                    {ct}
                   </label>
                 ))}
               </div>
@@ -329,7 +549,7 @@ export default function JobsPage() {
             <>
               <p className="text-xs text-muted">{total} open role{total === 1 ? "" : "s"}</p>
               <div className="grid sm:grid-cols-2 gap-4">
-                {jobs.map((j, idx) => (
+                {jobs.map((j) => (
                   <div key={j.id}>
                     <JobCard job={j} saved={savedIds.has(j.id)} onToggleSave={toggleSave} />
                   </div>

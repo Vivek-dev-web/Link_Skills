@@ -174,7 +174,7 @@ export default function RecommendedPage() {
 
               {/* Salary & skills */}
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-xs font-mono text-ink">{formatSalary(job.salaryMin, job.salaryMax)}</p>
+                <p className="text-xs font-mono text-ink">{formatSalary(job.salaryMin, job.salaryMax, job.location)}</p>
                 {job.experienceLevel && (
                   <span className="text-[11px] text-muted">{EXPERIENCE_LEVEL_LABELS[job.experienceLevel]}</span>
                 )}

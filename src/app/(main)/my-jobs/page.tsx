@@ -122,7 +122,7 @@ export default function MyJobsPage() {
                     <p className="text-xs text-muted">{job.company?.name}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted">
                       <span className="flex items-center gap-1"><MapPin size={10} />{job.location}</span>
-                      <span className="font-mono">{formatSalary(job.salaryMin, job.salaryMax)}</span>
+                      <span className="font-mono">{formatSalary(job.salaryMin, job.salaryMax, job.location)}</span>
                       {job.createdAt && <span className="flex items-center gap-1"><Clock size={10} />{formatRelativeTime(job.createdAt)}</span>}
                     </div>
                   </div>

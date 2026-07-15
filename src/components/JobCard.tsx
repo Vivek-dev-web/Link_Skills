@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MapPin, Briefcase, Heart, Star, Zap } from "lucide-react";
 import { formatSalary, formatRelativeTime } from "@/lib/utils";
-import { WORK_TYPE_LABELS, EXPERIENCE_LEVEL_LABELS } from "@/lib/constants";
+import { WORK_TYPE_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export default function JobCard({
@@ -63,7 +63,7 @@ export default function JobCard({
       </div>
 
       <div className="flex items-center justify-between mt-3">
-        <p className="text-xs font-mono text-ink">{formatSalary(job.salaryMin, job.salaryMax)}</p>
+        <p className="text-xs font-mono text-ink">{formatSalary(job.salaryMin, job.salaryMax, job.location)}</p>
         <p className="text-xs text-muted">{job.createdAt ? formatRelativeTime(job.createdAt) : ""}</p>
       </div>
 

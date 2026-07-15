@@ -133,7 +133,7 @@ export default function SavedPage() {
                   {job.remote && <span className="chip-teal !py-0.5 !px-2">Remote</span>}
                 </div>
                 {job.salaryMin && (
-                  <p className="text-xs font-mono text-ink mt-1">{formatSalary(job.salaryMin, job.salaryMax)}</p>
+                  <p className="text-xs font-mono text-ink mt-1">{formatSalary(job.salaryMin, job.salaryMax, job.location)}</p>
                 )}
                 <p className="text-[11px] text-muted mt-1">Saved {formatRelativeTime(job.savedAt)}</p>
               </div>

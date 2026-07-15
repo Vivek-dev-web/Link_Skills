@@ -9,10 +9,13 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const job = await prisma.job.findUnique({ where: { id: params.id } });
   if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const member = await prisma.companyMember.findUnique({
-    where: { companyId_userId: { companyId: job.companyId, userId: session.user.id } },
-  });
-  if (!member) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  const isAdmin = (session.user as any).role === "ADMIN";
+  if (!isAdmin) {
+    const member = await prisma.companyMember.findUnique({
+      where: { companyId_userId: { companyId: job.companyId, userId: session.user.id } },
+    });
+    if (!member) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
 
   const applications = await prisma.application.findMany({
     where: { jobId: params.id },
