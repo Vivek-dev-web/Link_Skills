@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
   Bookmark, GraduationCap, Users2, BarChart2,
-  Calendar, Newspaper, TrendingUp, Zap,
+  Calendar, Newspaper, Zap,
 } from "lucide-react";
 import Avatar from "@/components/Avatar";
 
@@ -39,7 +39,7 @@ export default function FeedLeftSidebar() {
     <aside className="w-60 shrink-0 hidden xl:block sticky top-20 space-y-3 self-start">
 
       {/* ── Profile card ───────────────────────────────────────── */}
-      <div className="card overflow-hidden">
+      <div className="card">
         {/* Banner */}
         <div className="relative h-[72px] overflow-hidden"
           style={{ background: "linear-gradient(135deg, #0B1120 0%, #0D3B38 50%, #0F7A72 100%)" }}>

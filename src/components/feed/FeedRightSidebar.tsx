@@ -42,7 +42,7 @@ export default function FeedRightSidebar() {
   }
 
   return (
-    <aside className="w-[280px] shrink-0 hidden lg:block sticky top-20 space-y-3 self-start">
+    <aside className="w-[280px] shrink-0 hidden lg:block sticky top-20 space-y-3 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
       {/* ── Promoted course ─────────────────────────────────────── */}
       <div className="card overflow-hidden">
