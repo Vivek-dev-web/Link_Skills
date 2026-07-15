@@ -59,7 +59,7 @@ export default function FeedLeftSidebar() {
 
         <div className="px-4 pb-4">
           {/* Avatar overlapping banner */}
-          <div className="-mt-7 mb-2.5">
+          <div className="relative z-10 -mt-7 mb-2.5">
             <Avatar
               name={user?.name ?? "?"}
               src={user?.image}

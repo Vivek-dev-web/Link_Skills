@@ -121,6 +121,7 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
   const [embedOpen, setEmbedOpen] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -439,7 +440,14 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
               key={c.id}
               comment={c}
               postId={post.id}
-              onReply={(name) => setCommentText(`@${name} `)}
+              onReply={(name) => {
+                  setCommentText(`@${name} `);
+                  setShowComments(true);
+                  setTimeout(() => {
+                    commentInputRef.current?.focus();
+                    commentInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 50);
+                }}
             />
           ))}
           {session?.user && (
@@ -447,6 +455,7 @@ export default function PostCard({ post, onDeleted, savedByMe }: { post: PostDat
               <Avatar name={session.user.name ?? "?"} src={session.user.image} size="xs" />
               <div className="flex flex-1 items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 focus-within:border-teal transition-colors">
                 <input
+                  ref={commentInputRef}
                   className="flex-1 bg-transparent text-sm text-ink placeholder:text-muted outline-none"
                   placeholder="Write a comment…"
                   value={commentText}
